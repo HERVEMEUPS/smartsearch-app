@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Documents - SmartSearch Admin</title>
+    <link rel="stylesheet" href="style-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .page-header {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 32px;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .page-subtitle {
+            color: var(--text-gray);
+            font-size: 16px;
+        }
+
+        /* Filtres */
+        .filters-section {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 14px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-filter {
+            padding: 10px 25px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-dark);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        /* Statistiques rapides */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .quick-stat-card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .stat-icon.perdus {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .stat-icon.trouves {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .stat-icon.total {
+            background: rgba(0, 123, 255, 0.1);
+            color: var(--primary-color);
+        }
+
+        .stat-icon.matches {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .stat-info h3 {
+            font-size: 28px;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .stat-info p {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin: 0;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            background: var(--white);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .tabs-header {
+            display: flex;
+            border-bottom: 2px solid var(--bg-light);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 20px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-gray);
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tab-button.active {
+            color: var(--primary-color);
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary-color);
+        }
+
+        .tab-button:hover {
+            background: var(--bg-light);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Table */
+        .documents-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .documents-table th {
+            background: var(--bg-light);
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-dark);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .documents-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .documents-table tr:hover {
+            background: var(--bg-light);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.perdu {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .status-badge.trouve {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .btn-view {
+            background: rgba(0, 123, 255, 0.1);
+            color: var(--primary-color);
+        }
+
+        .btn-view:hover {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .btn-edit {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .btn-edit:hover {
+            background: #ffc107;
+            color: var(--white);
+        }
+
+        .btn-delete {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+        }
+
+        .btn-delete:hover {
+            background: #dc3545;
+            color: var(--white);
+        }
+
+        .btn-validate {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .btn-validate:hover {
+            background: #28a745;
+            color: var(--white);
+        }
+
+        .btn-reject {
+            background: rgba(108, 117, 125, 0.1);
+            color: #6c757d;
+        }
+
+        .btn-reject:hover {
+            background: #6c757d;
+            color: var(--white);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-gray);
+        }
+
+        .spinner {
+            border: 3px solid var(--bg-light);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-gray);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            color: var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: 15px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            padding: 25px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: var(--text-dark);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-gray);
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn-modal {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-save {
+            background: var(--primary-color);
+            color: var(--white);
+        }
+
+        .btn-save:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-cancel {
+            background: var(--bg-light);
+            color: var(--text-dark);
+        }
+
+        .btn-cancel:hover {
+            background: var(--border-color);
+        }
+
+        .status-select {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+        }
+
+        .status-badge.en_attente {
+            background: rgba(255, 193, 7, 0.1);
+            color: #ffc107;
+        }
+
+        .status-badge.valide {
+            background: rgba(40, 167, 69, 0.1);
+            color: #28a745;
+        }
+
+        .status-badge.rejete {
+            background: rgba(108, 117, 125, 0.1);
+            color: #6c757d;
+        }
+
+        .detail-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--bg-light);
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: var(--text-dark);
+            width: 150px;
+        }
+
+        .detail-value {
+            color: var(--text-gray);
+            flex: 1;
+        }
+
+        @media (max-width: 1024px) {
+            .filters-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .quick-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .filters-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .documents-table {
+                font-size: 14px;
+            }
+
+            .documents-table th,
+            .documents-table td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <div class="logo">
+                    <i class="fas fa-file-shield"></i>
+                    <span>SmartSearch</span>
+                </div>
+
+                <ul class="nav-links">
+                    <li><a href="index.html"><i class="fas fa-home"></i> Accueil</a></li>
+                    <li><a href="dashboard.html"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+                    <li><a href="admin-documents.html" class="active"><i class="fas fa-folder-open"></i> Documents</a></li>
+                    <li><a href="admin-users.html"><i class="fas fa-users"></i> Utilisateurs</a></li>
+                </ul>
+
+                <div class="nav-actions">
+                    <div id="userInfo" style="color: var(--text-dark);"></div>
+                    <button onclick="logout()" class="btn-connexion">
+                        <i class="fas fa-sign-out-alt"></i> Déconnexion
+                    </button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <div class="admin-container">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="fas fa-folder-open"></i> Gestion des Documents
+            </h1>
+            <p class="page-subtitle">
+                Vue d'ensemble de tous les documents perdus et retrouvés
+            </p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="quick-stats" id="quickStats">
+            <div class="quick-stat-card">
+                <div class="stat-icon total">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="stat-total">-</h3>
+                    <p>Total Documents</p>
+                </div>
+            </div>
+
+            <div class="quick-stat-card">
+                <div class="stat-icon perdus">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="stat-perdus">-</h3>
+                    <p>Documents Perdus</p>
+                </div>
+            </div>
+
+            <div class="quick-stat-card">
+                <div class="stat-icon trouves">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="stat-trouves">-</h3>
+                    <p>Documents Trouvés</p>
+                </div>
+            </div>
+
+            <div class="quick-stat-card">
+                <div class="stat-icon matches">
+                    <i class="fas fa-link"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="stat-matches">-</h3>
+                    <p>Correspondances</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtres -->
+        <div class="filters-section">
+            <h3 style="margin-bottom: 20px; color: var(--text-dark);">
+                <i class="fas fa-filter"></i> Filtres
+            </h3>
+
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label>Type de document</label>
+                    <input type="text" id="filter-type" placeholder="CNI, Passeport...">
+                </div>
+
+                <div class="filter-group">
+                    <label>Nom du propriétaire</label>
+                    <input type="text" id="filter-nom" placeholder="Nom...">
+                </div>
+
+                <div class="filter-group">
+                    <label>Lieu</label>
+                    <input type="text" id="filter-lieu" placeholder="Yaoundé...">
+                </div>
+
+                <div class="filter-group">
+                    <label>Déclarant</label>
+                    <input type="text" id="filter-declarant" placeholder="Username...">
+                </div>
+            </div>
+
+            <div class="filter-actions">
+                <button class="btn-filter btn-primary" onclick="applyFilters()">
+                    <i class="fas fa-search"></i> Rechercher
+                </button>
+                <button class="btn-filter btn-secondary" onclick="resetFilters()">
+                    <i class="fas fa-redo"></i> Réinitialiser
+                </button>
+                <button class="btn-filter btn-secondary" onclick="exportData()">
+                    <i class="fas fa-download"></i> Exporter (CSV)
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs-container">
+            <div class="tabs-header">
+                <button class="tab-button active" onclick="switchTab('tous')">
+                    <i class="fas fa-list"></i> Tous les documents
+                </button>
+                <button class="tab-button" onclick="switchTab('perdus')">
+                    <i class="fas fa-times-circle"></i> Documents Perdus
+                </button>
+                <button class="tab-button" onclick="switchTab('trouves')">
+                    <i class="fas fa-check-circle"></i> Documents Trouvés
+                </button>
+            </div>
+
+            <!-- Tab Tous -->
+            <div class="tab-content active" id="tab-tous">
+                <div id="loading-tous" class="loading">
+                    <div class="spinner"></div>
+                    <p>Chargement des documents...</p>
+                </div>
+                <div id="table-tous" style="display: none;"></div>
+            </div>
+
+            <!-- Tab Perdus -->
+            <div class="tab-content" id="tab-perdus">
+                <div id="loading-perdus" class="loading">
+                    <div class="spinner"></div>
+                    <p>Chargement des documents perdus...</p>
+                </div>
+                <div id="table-perdus" style="display: none;"></div>
+            </div>
+
+            <!-- Tab Trouvés -->
+            <div class="tab-content" id="tab-trouves">
+                <div id="loading-trouves" class="loading">
+                    <div class="spinner"></div>
+                    <p>Chargement des documents trouvés...</p>
+                </div>
+                <div id="table-trouves" style="display: none;"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal Détails -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-info-circle"></i> Détails du document</h3>
+                <button class="modal-close" onclick="closeModal('detail')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Contenu dynamique -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Édition -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Modifier le document</h3>
+                <button class="modal-close" onclick="closeModal('edit')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="edit-id">
+
+                    <div class="form-group">
+                        <label>Type de déclaration *</label>
+                        <select id="edit-typeDeclaration" required>
+                            <option value="perdu">Perdu</option>
+                            <option value="trouve">Trouvé</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Type de document *</label>
+                        <input type="text" id="edit-typeDocument" required placeholder="CNI, Passeport...">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nom du propriétaire *</label>
+                        <input type="text" id="edit-nom" required placeholder="Nom complet">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Numéro du document</label>
+                        <input type="text" id="edit-numero" placeholder="Numéro si disponible">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Lieu *</label>
+                        <input type="text" id="edit-lieu" required placeholder="Yaoundé, Douala...">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date de l'incident *</label>
+                        <input type="date" id="edit-date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="edit-description" placeholder="Détails supplémentaires..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-cancel" onclick="closeModal('edit')">
+                    <i class="fas fa-times"></i> Annuler
+                </button>
+                <button class="btn-modal btn-save" onclick="saveDocument()">
+                    <i class="fas fa-save"></i> Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // API_URL est déjà défini dans script.js
+        let allDocuments = [];
+        let filteredDocuments = [];
+        let currentTab = 'tous';
+
+        // Vérifier admin au chargement
+        window.addEventListener("DOMContentLoaded", () => {
+            checkAdmin();
+            loadData();
+        });
+
+        function checkAdmin() {
+            const role = localStorage.getItem("role");
+            const username = localStorage.getItem("username");
+
+            if (role !== "admin") {
+                alert("Accès réservé aux administrateurs");
+                window.location.href = "index.html";
+                return;
+            }
+
+            document.getElementById("userInfo").textContent = `Admin: ${username}`;
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = "login.html";
+        }
+
+        async function loadData() {
+            const token = localStorage.getItem("token");
+
+            try {
+                // Charger tous les documents
+                const response = await fetch(`${API_URL}/documents`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        localStorage.clear();
+                        window.location.href = "login.html";
+                        return;
+                    }
+                    throw new Error("Erreur de chargement");
+                }
+
+                allDocuments = await response.json();
+                filteredDocuments = [...allDocuments];
+
+                // Charger les correspondances
+                const matchResponse = await fetch(`${API_URL}/correspondances`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                let matchCount = 0;
+                if (matchResponse.ok) {
+                    const matchData = await matchResponse.json();
+                    matchCount = matchData.total || 0;
+                }
+
+                // Mettre à jour les stats
+                updateStats(matchCount);
+
+                // Afficher les documents
+                displayDocuments();
+
+            } catch (error) {
+                console.error("Erreur:", error);
+                alert("Erreur lors du chargement des données");
+            }
+        }
+
+        function updateStats(matchCount) {
+            const total = allDocuments.length;
+            const perdus = allDocuments.filter(d => d.typeDeclaration === 'perdu').length;
+            const trouves = total - perdus;
+
+            document.getElementById("stat-total").textContent = total;
+            document.getElementById("stat-perdus").textContent = perdus;
+            document.getElementById("stat-trouves").textContent = trouves;
+            document.getElementById("stat-matches").textContent = matchCount;
+        }
+
+        function displayDocuments() {
+            const tous = filteredDocuments;
+            const perdus = filteredDocuments.filter(d => d.typeDeclaration === 'perdu');
+            const trouves = filteredDocuments.filter(d => d.typeDeclaration === 'trouve' || d.typeDeclaration === 'trouvé');
+
+            renderTable('tous', tous);
+            renderTable('perdus', perdus);
+            renderTable('trouves', trouves);
+        }
+
+        function renderTable(tab, documents) {
+            const loadingEl = document.getElementById(`loading-${tab}`);
+            const tableEl = document.getElementById(`table-${tab}`);
+
+            loadingEl.style.display = 'none';
+            tableEl.style.display = 'block';
+
+            if (documents.length === 0) {
+                tableEl.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <h3>Aucun document trouvé</h3>
+                        <p>Essayez de modifier vos filtres</p>
+                    </div>
+                `;
+                return;
+            }
+
+            tableEl.innerHTML = `
+                <table class="documents-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Type Document</th>
+                            <th>Nom Propriétaire</th>
+                            <th>Numéro</th>
+                            <th>Lieu</th>
+                            <th>Date</th>
+                            <th>Déclarant</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${documents.map(doc => `
+                            <tr>
+                                <td>
+                                    <span class="status-badge ${doc.typeDeclaration}">
+                                        ${doc.typeDeclaration === 'perdu' ? 'Perdu' : 'Trouvé'}
+                                    </span>
+                                </td>
+                                <td>${doc.typeDocument || '-'}</td>
+                                <td><strong>${doc.nom || '-'}</strong></td>
+                                <td>${doc.numero || '-'}</td>
+                                <td>${doc.lieu || '-'}</td>
+                                <td>${formatDate(doc.date)}</td>
+                                <td>${doc.declarantUsername || '-'}</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-icon btn-view" onclick='viewDocument(${JSON.stringify(doc)})' title="Voir détails">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn-icon btn-edit" onclick='editDocument(${JSON.stringify(doc)})' title="Modifier">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-icon btn-validate" onclick="validateDocument(${doc.id})" title="Valider">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn-icon btn-delete" onclick="deleteDocument(${doc.id}, '${doc.nom}')" title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fr-FR');
+        }
+
+        function switchTab(tab) {
+            // Mettre à jour les boutons
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            event.target.closest('.tab-button').classList.add('active');
+
+            // Mettre à jour le contenu
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            currentTab = tab;
+        }
+
+        function applyFilters() {
+            const filterType = document.getElementById('filter-type').value.toLowerCase();
+            const filterNom = document.getElementById('filter-nom').value.toLowerCase();
+            const filterLieu = document.getElementById('filter-lieu').value.toLowerCase();
+            const filterDeclarant = document.getElementById('filter-declarant').value.toLowerCase();
+
+            filteredDocuments = allDocuments.filter(doc => {
+                const matchType = !filterType || (doc.typeDocument && doc.typeDocument.toLowerCase().includes(filterType));
+                const matchNom = !filterNom || (doc.nom && doc.nom.toLowerCase().includes(filterNom));
+                const matchLieu = !filterLieu || (doc.lieu && doc.lieu.toLowerCase().includes(filterLieu));
+                const matchDeclarant = !filterDeclarant || (doc.declarantUsername && doc.declarantUsername.toLowerCase().includes(filterDeclarant));
+
+                return matchType && matchNom && matchLieu && matchDeclarant;
+            });
+
+            displayDocuments();
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-type').value = '';
+            document.getElementById('filter-nom').value = '';
+            document.getElementById('filter-lieu').value = '';
+            document.getElementById('filter-declarant').value = '';
+
+            filteredDocuments = [...allDocuments];
+            displayDocuments();
+        }
+
+        function viewDocument(doc) {
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="detail-row">
+                    <div class="detail-label">Type de déclaration</div>
+                    <div class="detail-value">
+                        <span class="status-badge ${doc.typeDeclaration}">
+                            ${doc.typeDeclaration === 'perdu' ? 'Perdu' : 'Trouvé'}
+                        </span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Type de document</div>
+                    <div class="detail-value">${doc.typeDocument || '-'}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Nom du propriétaire</div>
+                    <div class="detail-value"><strong>${doc.nom || '-'}</strong></div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Numéro</div>
+                    <div class="detail-value">${doc.numero || '-'}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Lieu</div>
+                    <div class="detail-value">${doc.lieu || '-'}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Date de l'incident</div>
+                    <div class="detail-value">${formatDate(doc.date)}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Description</div>
+                    <div class="detail-value">${doc.description || 'Aucune description'}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Déclaré par</div>
+                    <div class="detail-value">${doc.declarantUsername || '-'}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Date de déclaration</div>
+                    <div class="detail-value">${formatDate(doc.dateDeclaration)}</div>
+                </div>
+                ${doc.score ? `
+                <div class="detail-row">
+                    <div class="detail-label">Score de pertinence</div>
+                    <div class="detail-value">${doc.score}/100</div>
+                </div>
+                ` : ''}
+            `;
+
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        function closeModal(type) {
+            if (type === 'detail') {
+                document.getElementById('detailModal').classList.remove('active');
+            } else if (type === 'edit') {
+                document.getElementById('editModal').classList.remove('active');
+            }
+        }
+
+        function editDocument(doc) {
+            // Remplir le formulaire avec les données du document
+            document.getElementById('edit-id').value = doc.id;
+            document.getElementById('edit-typeDeclaration').value = doc.typeDeclaration;
+            document.getElementById('edit-typeDocument').value = doc.typeDocument || '';
+            document.getElementById('edit-nom').value = doc.nom || '';
+            document.getElementById('edit-numero').value = doc.numero || '';
+            document.getElementById('edit-lieu').value = doc.lieu || '';
+            document.getElementById('edit-date').value = doc.date || '';
+            document.getElementById('edit-description').value = doc.description || '';
+
+            // Ouvrir le modal
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        async function saveDocument() {
+            const token = localStorage.getItem("token");
+            const id = document.getElementById('edit-id').value;
+
+            const updatedDoc = {
+                id: parseInt(id),
+                typeDeclaration: document.getElementById('edit-typeDeclaration').value,
+                typeDocument: document.getElementById('edit-typeDocument').value,
+                nom: document.getElementById('edit-nom').value,
+                numero: document.getElementById('edit-numero').value,
+                lieu: document.getElementById('edit-lieu').value,
+                date: document.getElementById('edit-date').value,
+                description: document.getElementById('edit-description').value
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/documents/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updatedDoc)
+                });
+
+                if (response.ok) {
+                    alert('Document modifié avec succès !');
+                    closeModal('edit');
+                    loadData(); // Recharger les données
+                } else {
+                    const error = await response.json();
+                    alert('Erreur : ' + (error.message || 'Impossible de modifier le document'));
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la modification du document');
+            }
+        }
+
+        async function validateDocument(id) {
+            if (!confirm('Voulez-vous valider ce document ?')) {
+                return;
+            }
+
+            const token = localStorage.getItem("token");
+
+            try {
+                const response = await fetch(`${API_URL}/documents/${id}/validate`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Document validé avec succès !');
+                    loadData();
+                } else {
+                    const error = await response.json();
+                    alert('Erreur : ' + (error.message || 'Impossible de valider'));
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la validation');
+            }
+        }
+
+        async function deleteDocument(id, nom) {
+            if (!confirm(`Êtes-vous sûr de vouloir supprimer le document de "${nom}" ?\n\nCette action est irréversible !`)) {
+                return;
+            }
+
+            const token = localStorage.getItem("token");
+
+            try {
+                const response = await fetch(`${API_URL}/documents/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    alert('Document supprimé avec succès !');
+                    loadData();
+                } else {
+                    const error = await response.json();
+                    alert('Erreur : ' + (error.message || 'Impossible de supprimer'));
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la suppression');
+            }
+        }
+
+        function exportData() {
+            // Préparer les données CSV
+            const csvData = [
+                ['Type', 'Type Document', 'Nom', 'Numéro', 'Lieu', 'Date', 'Description', 'Déclarant', 'Date Déclaration'],
+                ...filteredDocuments.map(doc => [
+                    doc.typeDeclaration,
+                    doc.typeDocument || '',
+                    doc.nom || '',
+                    doc.numero || '',
+                    doc.lieu || '',
+                    formatDate(doc.date),
+                    doc.description || '',
+                    doc.declarantUsername || '',
+                    formatDate(doc.dateDeclaration)
+                ])
+            ];
+
+            const csvContent = csvData.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+            const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `documents_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        // Fermer modal en cliquant à l'extérieur
+        window.onclick = function(event) {
+            const detailModal = document.getElementById('detailModal');
+            const editModal = document.getElementById('editModal');
+
+            if (event.target === detailModal) {
+                closeModal('detail');
+            } else if (event.target === editModal) {
+                closeModal('edit');
+            }
+        }
+    </script>
+
+</body>
+
+</html>

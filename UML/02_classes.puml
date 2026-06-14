@@ -1,0 +1,157 @@
+@startuml Diagramme de Classes - Système de Documents Perdus
+
+title Diagramme de Classes\nSystème Intelligent de Documents Perdus
+
+' Classe Utilisateur
+class Utilisateur {
+  - id: Integer
+  - username: String
+  - password: String (haché)
+  - role: String
+  + seConnecter(): Token
+  + seDeconnecter(): void
+  + modifierMotDePasse(): Boolean
+}
+
+' Classe Document
+class Document {
+  - id: Integer
+  - typeDeclaration: String
+  - typeDocument: String
+  - nom: String
+  - numero: String
+  - lieu: String
+  - date: Date
+  - description: String
+  - declarantId: Integer
+  - declarantUsername: String
+  - dateDeclaration: DateTime
+  + valider(): Boolean
+  + afficher(): String
+}
+
+' Classe Déclarant
+class Declarant {
+  + declarerDocumentPerdu(doc: Document): Boolean
+  + declarerDocumentTrouve(doc: Document): Boolean
+  + consulterMesDeclarations(): List<Document>
+  + rechercherDocuments(criteres): List<ResultatRecherche>
+}
+
+' Classe Administrateur
+class Administrateur {
+  + consulterTousLesDocuments(): List<Document>
+  + consulterStatistiques(): Statistiques
+  + gererUtilisateurs(): void
+  + exporterDonnees(format): File
+  + consulterCorrespondances(): List<Correspondance>
+}
+
+' Classe RechercheIntelligente
+class RechercheIntelligente {
+  - threshold: Float
+  + rechercheFloue(query, documents): List<Document>
+  + calculerScore(doc, criteres): Integer
+  + calculerSimilarite(str1, str2): Float
+  + obtenirSuggestions(partialInput): List<String>
+}
+
+' Classe MatchingEngine
+class MatchingEngine {
+  + trouverCorrespondances(documents): List<Correspondance>
+  + calculerScoreMatch(perdu, trouve): Integer
+  + determinerConfiance(score): String
+}
+
+' Classe Correspondance
+class Correspondance {
+  - idPerdu: Integer
+  - idTrouve: Integer
+  - matchScore: Integer
+  - confidence: String
+  - matchDetails: List<String>
+  + afficher(): String
+  + notifierUtilisateurs(): void
+}
+
+' Classe ResultatRecherche
+class ResultatRecherche {
+  - document: Document
+  - score: Integer
+  - matchDetails: List<String>
+  + afficher(): String
+}
+
+' Classe Statistiques
+class Statistiques {
+  - totalDocuments: Integer
+  - documentsPerdus: Integer
+  - documentsTrouves: Integer
+  - correspondances: Integer
+  - tauxRecuperation: Float
+  - parType: Map
+  - parLieu: Map
+  - parMois: Map
+  + calculer(documents): void
+  + exporter(format): File
+}
+
+' Classe AuthenticationService
+class AuthenticationService {
+  - jwtSecret: String
+  - saltRounds: Integer
+  + genererToken(user): String
+  + verifierToken(token): User
+  + hacherMotDePasse(password): String
+  + comparer(password, hash): Boolean
+}
+
+' Énumération TypeDeclaration
+enum TypeDeclaration {
+  PERDU
+  TROUVE
+}
+
+' Énumération Role
+enum Role {
+  DECLARANT
+  ADMIN
+}
+
+' Relations
+Utilisateur <|-- Declarant
+Utilisateur <|-- Administrateur
+
+Utilisateur "1" -- "0..*" Document : déclare >
+Document "1" -- "1" ResultatRecherche : contient >
+Document -- TypeDeclaration
+
+Utilisateur -- Role
+
+RechercheIntelligente ..> Document : recherche
+RechercheIntelligente ..> ResultatRecherche : génère
+
+MatchingEngine ..> Document : analyse
+MatchingEngine ..> Correspondance : crée
+
+Administrateur ..> Statistiques : consulte
+Statistiques ..> Document : analyse
+
+Declarant ..> RechercheIntelligente : utilise
+Administrateur ..> MatchingEngine : utilise
+
+AuthenticationService ..> Utilisateur : authentifie
+
+note right of RechercheIntelligente
+  Utilise Fuse.js pour fuzzy search
+  Algorithme de Levenshtein
+  Scoring pondéré intelligent
+end note
+
+note right of MatchingEngine
+  Matching automatique Perdu ↔ Trouvé
+  Score de confiance calculé
+  Notifications automatiques
+end note
+
+@enduml

@@ -1,0 +1,88 @@
+@startuml Diagramme de Séquence - Recherche Intelligente
+
+title Diagramme de Séquence\nRecherche Intelligente avec Fuzzy Matching
+
+actor "Déclarant" as User
+participant "Frontend\n(recherche.html)" as Frontend
+participant "API REST\n(server.js)" as API
+participant "AuthMiddleware" as AuthMW
+participant "IntelligentSearch\n(intelligent-search.js)" as IS
+database "documents.json" as DB
+
+User -> Frontend : Saisit critères de recherche\n(nom: "DUPON", type: "CNI")
+activate Frontend
+
+Frontend -> API : GET /recherche?nom=DUPON&typeDocument=CNI\nHeaders: {Authorization: Bearer <token>}
+activate API
+
+API -> AuthMW : verifierToken(token)
+activate AuthMW
+
+AuthMW -> AuthMW : jwt.verify(token, JWT_SECRET)
+
+alt Token invalide ou expiré
+    AuthMW --> API : Erreur 401
+    API --> Frontend : 401 Unauthorized
+    Frontend -> Frontend : localStorage.clear()
+    Frontend --> User : Redirection vers login
+else Token valide
+    AuthMW --> API : Payload {id, username, role}
+    deactivate AuthMW
+
+    API -> DB : Lire documents.json
+    activate DB
+    DB --> API : Liste documents
+    deactivate DB
+
+    API -> IS : intelligentSearch(documents, criteres)
+    activate IS
+
+    ' Étape 1 : Filtres stricts
+    IS -> IS : Filtrer par date\net typeDeclaration
+
+    ' Étape 2 : Fuzzy Search
+    IS -> IS : **Fuzzy Search avec Fuse.js**\nConfiguration: threshold 0.4\nKeys pondérées:\n- nom (40%)\n- typeDocument (30%)\n- lieu (20%)
+
+    IS -> IS : fuse.search(criteres)
+
+    loop Pour chaque document trouvé
+        IS -> IS : **Calcul de similarité**\ncompareTwoStrings(\n  "DUPON", "DUPONT"\n)
+        note right
+          Algorithme de Levenshtein
+          Retourne similarité: 0.90
+          (90% de similarité)
+        end note
+
+        IS -> IS : **Calcul du score**\n- Nom similaire: 90% × 30 = 27 pts\n- Type exact: +20 pts\n- Si < 30 jours: +10 pts\n= 57/100 pts
+    end
+
+    ' Étape 3 : Filtrage et tri
+    IS -> IS : Filtrer score >= 20
+    IS -> IS : Trier par score décroissant
+
+    IS --> API : Liste résultats avec scores
+    deactivate IS
+
+    API --> Frontend : 200 OK\n[\n  {\n    "nom": "DUPONT Jean",\n    "typeDocument": "CNI",\n    "score": 57,\n    "matchDetails": ["Nom similaire 90%", "Type exact"]\n  }\n]
+
+    Frontend -> Frontend : afficherResultats(documents)
+    Frontend --> User : Afficher résultats\navec scores de pertinence
+end
+
+deactivate API
+deactivate Frontend
+
+note right of IS
+  **Algorithme Intelligent :**
+  1. Filtres stricts (dates)
+  2. Fuzzy matching (Fuse.js)
+  3. Calcul de similarité (Levenshtein)
+  4. Scoring pondéré (0-100)
+  5. Bonus documents récents
+
+  **Tolère les fautes :**
+  "DUPON" → trouve "DUPONT"
+  "CNY" → trouve "CNI"
+end note
+
+@enduml

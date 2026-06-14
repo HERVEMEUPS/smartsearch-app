@@ -1,34 +1,435 @@
-function declarerDocument() {
+/*
+// Déclaration
+document.getElementById("declarationForm")?.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
     const data = {
-        type_document: document.getElementById("type").value,
-        nom_proprietaire: document.getElementById("nom").value,
-        numero_document: document.getElementById("numero").value,
-        lieu_perte: document.getElementById("lieu").value,
-        date_perte: document.getElementById("date").value
+        typeDeclaration: typeDeclaration.value,
+        typeDocument: typeDocument.value,
+        nom: nom.value,
+        numero: numero.value,
+        lieu: lieu.value,
+        date: date.value,
+        description: description.value
     };
 
-    fetch("http://127.0.0.1:5000/api/declarer", {
+    await fetch("http://localhost:3000/declaration", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
-    })
-        .then(res => res.json())
-        .then(data => alert(data.message));
+    });
+
+    alert("Déclaration enregistrée !");
+    this.reset();
+});
+
+// Recherche
+//document.getElementById("rechercheForm")?.addEventListener("submit", async function (e) {
+// e.preventDefault();
+
+// const response = await fetch("http://localhost:3000/recherche");
+// const documents = await response.json();
+
+//const resultats = document.getElementById("resultats");
+// resultats.innerHTML = "";
+
+// documents.forEach(doc => {
+//   resultats.innerHTML += `
+//       <p><strong>${doc.typeDocument}</strong> - ${doc.nom} (${doc.typeDeclaration})</p>
+//      `;
+//  });
+//});
+document.getElementById("rechercheForm")?.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const typeDocument = document.getElementById("rTypeDocument").value;
+    const nom = document.getElementById("rNom").value;
+    const numero = document.getElementById("rNumero").value;
+
+    const params = new URLSearchParams({
+        typeDocument,
+        nom,
+        numero
+    });
+
+    const response = await fetch(`http://localhost:3000/recherche?${params}`);
+    const resultatsData = await response.json();
+
+    const typeDeclaration = document.getElementById("rTypeDeclaration").value;
+    const lieu = document.getElementById("rLieu").value;
+    const dateDebut = document.getElementById("rDateDebut").value;
+    const dateFin = document.getElementById("rDateFin").value;
+    const params = new URLSearchParams({
+        typeDocument,
+        nom,
+        numero,
+        typeDeclaration,
+        lieu,
+        dateDebut,
+        dateFin
+    });
+
+
+    const resultats = document.getElementById("resultats");
+    resultats.innerHTML = "";
+
+    if (resultatsData.length === 0) {
+        resultats.innerHTML = "<p>Aucun document correspondant.</p>";
+        return;
+    }
+
+    resultatsData.forEach(doc => {
+        resultats.innerHTML += `
+            <p>
+                <strong>${doc.typeDocument}</strong> – ${doc.nom}<br>
+                Type: ${doc.typeDeclaration} | Score: ${doc.score}/12
+            </p>
+        `;
+    });
+});
+*/
+
+console.log("script.js chargé");
+
+/***************************************
+ * CONFIGURATION GLOBALE
+ ***************************************/
+const API_URL = "http://localhost:3000";
+
+/***************************************
+ * VÉRIFICATION DE L'AUTHENTIFICATION
+ ***************************************/
+function checkAuth() {
+    const token = localStorage.getItem("token");
+    const username = localStorage.getItem("username");
+
+    // Afficher l'utilisateur connecté s'il existe
+    const userInfoDiv = document.getElementById("userInfo");
+    if (userInfoDiv && token && username) {
+        userInfoDiv.innerHTML = `
+            <span>Connecté : <strong>${username}</strong></span>
+            <button onclick="logout()" style="margin-left: 10px;">Déconnexion</button>
+        `;
+    }
 }
 
-function rechercherDocument() {
-    const motCle = document.getElementById("motCle").value;
+/***************************************
+ * DÉCONNEXION
+ ***************************************/
+function logout() {
+    localStorage.clear();
+    alert("Déconnexion réussie");
+    window.location.href = "login.html";
+}
 
-    fetch(`http://127.0.0.1:5000/api/rechercher?q=${motCle}`)
-        .then(res => res.json())
-        .then(docs => {
-            let resultat = document.getElementById("resultats");
-            resultat.innerHTML = "";
+// Vérifier l'authentification au chargement de la page
+window.addEventListener("DOMContentLoaded", checkAuth);
 
-            docs.forEach(doc => {
-                resultat.innerHTML += `
-                    <li>${doc.type_document} - ${doc.nom_proprietaire} - ${doc.numero_document}</li>
-                `;
+/***************************************
+ * AUTHENTIFICATION
+ ***************************************/
+const loginForm = document.getElementById("loginForm");
+const message = document.getElementById("message");
+
+if (loginForm) {
+    loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        try {
+            const response = await fetch(`${API_URL}/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password })
             });
-        });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                message.textContent = data.message;
+                return;
+            }
+
+            // Sauvegarde du token et des infos utilisateur
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("username", data.username);
+            localStorage.setItem("role", data.role);
+
+            // Redirection selon le rôle
+            if (data.role === "admin") {
+                window.location.href = "dashboard.html";
+            } else {
+                window.location.href = "index.html";
+            }
+
+        } catch (err) {
+            message.textContent = "Erreur serveur";
+        }
+    });
 }
+
+/***************************************
+ * INSCRIPTION
+ ***************************************/
+/*const registerForm = document.getElementById("registerForm");
+const registerMessage = document.getElementById("message");
+
+if (registerForm) {
+    registerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById("reg_username").value;
+        const password = document.getElementById("reg_password").value;
+
+        try {
+            const response = await fetch(`${API_URL}/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                registerMessage.textContent = data.message;
+                return;
+            }
+
+            alert("Compte créé avec succès !");
+            window.location.href = "login.html";
+
+        } catch (err) {
+            registerMessage.textContent = "Erreur serveur";
+        }
+    });
+}*/
+
+/***************************************
+ * INSCRIPTION
+ ***************************************/
+const registerForm = document.getElementById("registerForm");
+const registerMessage = document.getElementById("message");
+
+// Afficher/masquer le champ code admin selon le rôle sélectionné
+const roleSelect = document.getElementById("reg_role");
+const adminCodeInput = document.getElementById("admin_code");
+
+if (roleSelect && adminCodeInput) {
+    roleSelect.addEventListener("change", (e) => {
+        if (e.target.value === "admin") {
+            adminCodeInput.style.display = "block";
+            adminCodeInput.required = true;
+        } else {
+            adminCodeInput.style.display = "none";
+            adminCodeInput.required = false;
+            adminCodeInput.value = ""; // Réinitialiser le champ
+        }
+    });
+}
+
+if (registerForm) {
+    registerForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById("reg_username").value;
+        const password = document.getElementById("reg_password").value;
+        const role = document.getElementById("reg_role").value;
+        const adminCode = document.getElementById("admin_code").value;
+
+        // Validation : vérifier que le rôle est sélectionné
+        if (!role) {
+            registerMessage.textContent = "Veuillez sélectionner un type de compte";
+            registerMessage.style.color = "red";
+            return;
+        }
+
+        // Validation : vérifier le code admin si rôle admin
+        if (role === "admin" && !adminCode) {
+            registerMessage.textContent = "Le code administrateur est requis pour créer un compte admin";
+            registerMessage.style.color = "red";
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username,
+                    password,
+                    role,
+                    adminCode
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                registerMessage.textContent = data.message;
+                registerMessage.style.color = "red";
+                return;
+            }
+
+            // Afficher un message de succès
+            registerMessage.textContent = "✓ Compte créé avec succès ! Redirection...";
+            registerMessage.style.color = "green";
+
+            // Redirection après 1.5 secondes
+            setTimeout(() => {
+                window.location.href = "login.html";
+            }, 1500);
+
+        } catch (err) {
+            registerMessage.textContent = "Erreur serveur - Vérifiez que le serveur est démarré";
+            registerMessage.style.color = "red";
+        }
+    });
+}
+
+
+/***************************************
+ * DÉCLARATION D’UN DOCUMENT
+ ***************************************/
+const declarationForm = document.getElementById("declarationForm");
+
+if (declarationForm) {
+    declarationForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        // Vérification de l’authentification
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("Vous devez être connecté pour déclarer un document");
+            window.location.href = "login.html";
+            return;
+        }
+
+        // Récupération des valeurs du formulaire
+        const documentData = {
+            typeDeclaration: document.getElementById("typeDeclaration").value,
+            typeDocument: document.getElementById("typeDocument").value,
+            nom: document.getElementById("nom").value,
+            numero: document.getElementById("numero").value,
+            lieu: document.getElementById("lieu").value,
+            date: document.getElementById("date").value,
+            description: document.getElementById("description").value
+        };
+
+        try {
+            const response = await fetch(`${API_URL}/declaration`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(documentData)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    alert("Session expirée. Veuillez vous reconnecter.");
+                    localStorage.clear();
+                    window.location.href = "login.html";
+                    return;
+                }
+                alert(result.message || "Erreur lors de l’enregistrement");
+                return;
+            }
+
+            alert(result.message);
+            declarationForm.reset();
+        } catch (error) {
+            alert("Erreur lors de l’enregistrement");
+            console.error(error);
+        }
+    });
+}
+
+/***************************************
+ * RECHERCHE DE DOCUMENTS
+ ***************************************/
+const rechercheForm = document.getElementById("rechercheForm");
+const resultatsDiv = document.getElementById("resultats");
+
+if (rechercheForm) {
+    rechercheForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        // Vérification de l'authentification
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("Vous devez être connecté pour rechercher des documents");
+            window.location.href = "login.html";
+            return;
+        }
+
+        // Construction des paramètres de recherche
+        const params = new URLSearchParams({
+            typeDeclaration: document.getElementById("r_typeDeclaration").value,
+            typeDocument: document.getElementById("r_typeDocument").value,
+            nom: document.getElementById("r_nom").value,
+            numero: document.getElementById("r_numero").value,
+            lieu: document.getElementById("r_lieu").value,
+            dateDebut: document.getElementById("r_dateDebut").value,
+            dateFin: document.getElementById("r_dateFin").value
+        });
+
+        try {
+            const response = await fetch(`${API_URL}/recherche?${params.toString()}`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    alert("Session expirée. Veuillez vous reconnecter.");
+                    localStorage.clear();
+                    window.location.href = "login.html";
+                    return;
+                }
+                throw new Error("Erreur de recherche");
+            }
+
+            const documents = await response.json();
+            afficherResultats(documents);
+        } catch (error) {
+            resultatsDiv.innerHTML = "<p>Erreur lors de la recherche</p>";
+            console.error(error);
+        }
+    });
+}
+
+/***************************************
+ * AFFICHAGE DES RÉSULTATS
+ ***************************************/
+function afficherResultats(documents) {
+    resultatsDiv.innerHTML = "";
+
+    if (documents.length === 0) {
+        resultatsDiv.innerHTML = "<p>Aucun document trouvé</p>";
+        return;
+    }
+
+    documents.forEach(doc => {
+        const card = document.createElement("div");
+        card.className = "result-card";
+
+        card.innerHTML = `
+            <h3>${doc.typeDocument}</h3>
+            <p><strong>Nom :</strong> ${doc.nom}</p>
+            <p><strong>Numéro :</strong> ${doc.numero || "N/A"}</p>
+            <p><strong>Lieu :</strong> ${doc.lieu}</p>
+            <p><strong>Date :</strong> ${doc.date}</p>
+            <p><strong>Type :</strong> ${doc.typeDeclaration}</p>
+            <p><strong>Score :</strong> ${doc.score}</p>
+        `;
+
+        resultatsDiv.appendChild(card);
+    });
+}
+

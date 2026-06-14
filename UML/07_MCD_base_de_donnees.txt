@@ -1,0 +1,197 @@
+===========================================
+MODÈLE CONCEPTUEL DE DONNÉES (MCD)
+Système de Documents Perdus
+===========================================
+
+ENTITÉS:
+========
+
+1. UTILISATEUR
+--------------
+* id_utilisateur (Identifiant)
+- username (Chaîne, UNIQUE)
+- password (Chaîne, haché)
+- role (Énumération: 'declarant', 'admin')
+- date_inscription (DateTime)
+
+2. DOCUMENT
+-----------
+* id_document (Identifiant)
+- type_declaration (Énumération: 'perdu', 'trouve')
+- type_document (Chaîne) [CNI, Passeport, etc.]
+- nom_proprietaire (Chaîne)
+- numero (Chaîne, NULLABLE)
+- lieu (Chaîne)
+- date_incident (Date)
+- description (Texte, NULLABLE)
+- date_declaration (DateTime)
+- statut (Énumération: 'actif', 'recupere', 'archive')
+
+3. CORRESPONDANCE
+-----------------
+* id_correspondance (Identifiant)
+- score_match (Entier, 0-100)
+- confiance (Énumération: 'faible', 'moyenne', 'elevee', 'tres_elevee')
+- details_match (JSON)
+- date_detection (DateTime)
+- statut (Énumération: 'en_attente', 'confirmee', 'rejetee')
+
+4. NOTIFICATION
+---------------
+* id_notification (Identifiant)
+- type (Énumération: 'correspondance', 'recuperation', 'systeme')
+- message (Texte)
+- lu (Booléen)
+- date_envoi (DateTime)
+
+
+ASSOCIATIONS:
+=============
+
+DÉCLARE
+-------
+Cardinalité : Un UTILISATEUR (1,n) -- (0,n) DOCUMENT
+Description : Un utilisateur peut déclarer plusieurs documents
+
+Attributs de l'association : aucun
+
+CORRESPOND_A
+------------
+Cardinalité : Un DOCUMENT perdu (0,n) -- (0,n) Un DOCUMENT trouvé
+Description : Un document perdu peut correspondre à plusieurs documents trouvés
+
+Réalisation : via CORRESPONDANCE
+- DOCUMENT_PERDU (0,n) -- (1,1) CORRESPONDANCE
+- DOCUMENT_TROUVE (0,n) -- (1,1) CORRESPONDANCE
+
+NOTIFIE
+-------
+Cardinalité : CORRESPONDANCE (1,1) -- (1,n) NOTIFICATION
+Description : Une correspondance génère au moins une notification
+
+REÇOIT
+------
+Cardinalité : UTILISATEUR (1,1) -- (0,n) NOTIFICATION
+Description : Un utilisateur peut recevoir plusieurs notifications
+
+
+CONTRAINTES D'INTÉGRITÉ:
+=========================
+
+1. username UNIQUE dans UTILISATEUR
+2. password doit être haché (bcrypt)
+3. role ∈ {'declarant', 'admin'}
+4. type_declaration ∈ {'perdu', 'trouve'}
+5. score_match ∈ [0, 100]
+6. Une CORRESPONDANCE doit avoir :
+   - 1 document avec type_declaration = 'perdu'
+   - 1 document avec type_declaration = 'trouve'
+7. date_declaration >= date_incident
+8. score_match >= 70 pour créer une CORRESPONDANCE
+
+
+RÈGLES MÉTIER:
+==============
+
+1. Un utilisateur ne peut modifier que ses propres déclarations
+2. Un admin peut voir tous les documents
+3. Une correspondance avec score >= 90 génère notification immédiate
+4. Un document peut être marqué 'recupere' si correspondance confirmée
+5. Les notifications sont supprimées après 30 jours si lues
+
+
+DIAGRAMME ASCII:
+================
+
++------------------+
+|   UTILISATEUR    |
++------------------+
+| * id             |    déclare
+| - username       |   1,n -------- 0,n
+| - password       |
+| - role           |
++------------------+
+        |
+        | reçoit
+        | 1,1
+        |
+        | 0,n
+        v
++------------------+
+|  NOTIFICATION    |
++------------------+
+| * id             |
+| - type           |
+| - message        |<-------- génère --------
+| - lu             |           1,n          |
++------------------+                        |
+                                       1,1  |
++------------------+              +------------------+
+|    DOCUMENT      |              |  CORRESPONDANCE  |
++------------------+              +------------------+
+| * id             |    0,n       | * id             |
+| - type_decla     |<------------ | - score_match    |
+| - type_doc       |    perdu     | - confiance      |
+| - nom            |              | - details        |
+| - numero         |    0,n       +------------------+
+| - lieu           |<------------
+| - date           |    trouve
+| - description    |    1,1
+| - statut         |
++------------------+
+
+
+EXTENSION FUTURE (PostgreSQL):
+===============================
+
+CREATE TABLE utilisateurs (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('declarant', 'admin')),
+    date_inscription TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE documents (
+    id SERIAL PRIMARY KEY,
+    type_declaration VARCHAR(10) NOT NULL CHECK (type_declaration IN ('perdu', 'trouve')),
+    type_document VARCHAR(50) NOT NULL,
+    nom_proprietaire VARCHAR(100) NOT NULL,
+    numero VARCHAR(50),
+    lieu VARCHAR(100) NOT NULL,
+    date_incident DATE NOT NULL,
+    description TEXT,
+    date_declaration TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    statut VARCHAR(20) DEFAULT 'actif' CHECK (statut IN ('actif', 'recupere', 'archive')),
+    declarant_id INTEGER REFERENCES utilisateurs(id) ON DELETE CASCADE
+);
+
+CREATE TABLE correspondances (
+    id SERIAL PRIMARY KEY,
+    document_perdu_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,
+    document_trouve_id INTEGER REFERENCES documents(id) ON DELETE CASCADE,
+    score_match INTEGER CHECK (score_match BETWEEN 0 AND 100),
+    confiance VARCHAR(20) CHECK (confiance IN ('faible', 'moyenne', 'elevee', 'tres_elevee')),
+    details_match JSONB,
+    date_detection TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    statut VARCHAR(20) DEFAULT 'en_attente',
+    CONSTRAINT valid_types CHECK (
+        (SELECT type_declaration FROM documents WHERE id = document_perdu_id) = 'perdu'
+        AND
+        (SELECT type_declaration FROM documents WHERE id = document_trouve_id) = 'trouve'
+    )
+);
+
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    utilisateur_id INTEGER REFERENCES utilisateurs(id) ON DELETE CASCADE,
+    correspondance_id INTEGER REFERENCES correspondances(id) ON DELETE CASCADE,
+    type VARCHAR(20) NOT NULL,
+    message TEXT NOT NULL,
+    lu BOOLEAN DEFAULT FALSE,
+    date_envoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_documents_type_decla ON documents(type_declaration);
+CREATE INDEX idx_documents_declarant ON documents(declarant_id);
+CREATE INDEX idx_notifications_user ON notifications(utilisateur_id, lu);

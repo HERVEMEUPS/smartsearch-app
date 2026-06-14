@@ -1,0 +1,95 @@
+@startuml Diagramme de Déploiement - Architecture
+
+title Diagramme de Déploiement\nArchitecture du Système
+
+node "Poste Client" as Client {
+  component "Navigateur Web\n(Chrome, Firefox)" as Browser {
+    artifact "index.html"
+    artifact "login.html"
+    artifact "register.html"
+    artifact "declaration.html"
+    artifact "recherche.html"
+    artifact "dashboard.html"
+    artifact "script.js"
+    artifact "style.css"
+  }
+}
+
+node "Serveur Application" as AppServer {
+  component "Node.js Runtime" as NodeJS {
+    artifact "server.js\n(API REST Express)"
+    artifact "intelligent-search.js\n(Algorithme fuzzy)"
+    artifact "hash-passwords.js"
+  }
+
+  component "Bibliothèques" as Libs {
+    artifact "express\n(Framework web)"
+    artifact "bcrypt\n(Hachage MDP)"
+    artifact "jsonwebtoken\n(JWT Auth)"
+    artifact "fuse.js\n(Fuzzy search)"
+    artifact "string-similarity\n(Levenshtein)"
+    artifact "cors\n(CORS support)"
+    artifact "dotenv\n(Variables env)"
+  }
+}
+
+node "Stockage Données" as Storage {
+  database "JSON Files" as DB {
+    artifact "users.json\n(Utilisateurs)"
+    artifact "documents.json\n(Documents)"
+  }
+
+  artifact ".env\n(Secrets)"
+}
+
+node "CDN Externe" as CDN {
+  artifact "Chart.js\n(Graphiques)"
+}
+
+' Relations
+Browser -down-> NodeJS : HTTP/HTTPS\nRequêtes API REST\nJSON + JWT Token
+NodeJS -down-> DB : Lecture/Écriture\nJSON
+NodeJS .left.> Libs : utilise
+NodeJS .down.> ".env" : charge
+Browser .up.> CDN : charge\nChart.js
+
+' Notes
+note right of Browser
+  **Frontend**
+  - HTML5 + CSS3
+  - JavaScript Vanilla
+  - LocalStorage (token JWT)
+  - Fetch API (HTTP)
+end note
+
+note right of NodeJS
+  **Backend**
+  - Node.js + Express
+  - Architecture REST
+  - Authentification JWT
+  - Algorithmes intelligents
+  - Middleware sécurisé
+end note
+
+note right of DB
+  **Persistance**
+  - Format JSON
+  - Lecture/écriture synchrone
+  - Extensible vers PostgreSQL
+  - Fichiers versionnés (Git)
+end note
+
+note bottom
+  **Protocole HTTP/HTTPS**
+  - GET /recherche (protégée)
+  - POST /declaration (protégée)
+  - GET /correspondances (protégée)
+  - GET /statistiques (admin)
+  - POST /login (publique)
+  - POST /register (publique)
+
+  **Token JWT** dans header:
+  Authorization: Bearer eyJhbGciOi...
+end note
+
+@enduml

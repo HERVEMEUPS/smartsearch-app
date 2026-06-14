@@ -1,15 +1,357 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 
 <head>
-    <title>Documents Perdus</title>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartSearch - Retrouvez vos documents perdus</title>
+    <link rel="stylesheet" href="style-modern.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
-    <h1>Système Intelligent de Documents Perdus</h1>
-    <a href="declarer.html">Déclarer un document</a><br><br>
-    <a href="rechercher.html">Rechercher un document</a>
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="main-header">
+        <div class="container">
+            <nav class="navbar">
+                <div class="logo">
+                    <i class="fas fa-file-shield"></i>
+                    <span>SmartSearch</span>
+                </div>
+
+                <ul class="nav-links">
+                    <li><a href="index.html" class="active"><i class="fas fa-home"></i> Accueil</a></li>
+                    <li><a href="recherche.html"><i class="fas fa-search"></i> Rechercher</a></li>
+                    <li><a href="dashboard.html" id="nav-dashboard" style="display: none;"><i
+                                class="fas fa-chart-line"></i> Dashboard</a></li>
+                    <li><a href="admin-documents.html" id="nav-admin-docs" style="display: none;"><i
+                                class="fas fa-folder-open"></i> Documents</a></li>
+                </ul>
+
+                <div class="nav-actions">
+                    <div class="language-selector">
+                        <i class="fas fa-globe"></i>
+                        <select id="language">
+                            <option value="fr">Français</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+                    <a href="login.html" class="btn-connexion" id="auth-btn">
+                        <i class="fas fa-sign-in-alt"></i> Connexion
+                    </a>
+                </div>
+
+                <!-- Menu mobile -->
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <span class="badge">
+                        <i class="fas fa-users"></i> PLATEFORME COMMUNAUTAIRE
+                    </span>
+
+                    <h1 class="hero-title">
+                        Retrouvez vos<br>
+                        documents perdus<br>
+                        <span class="highlight">au Cameroun</span>
+                    </h1>
+
+                    <p class="hero-description">
+                        SmartSearch est la plateforme #1 au Cameroun pour déclarer la perte de vos documents
+                        et retrouver ceux qui ont été trouvés par la communauté.
+                    </p>
+
+                    <div class="hero-buttons">
+                        <a href="declaration.html" class="btn btn-primary">
+                            <i class="fas fa-file-plus"></i> Déclarer une perte
+                        </a>
+                        <a href="recherche.html" class="btn btn-secondary">
+                            <i class="fas fa-search"></i> Rechercher un document
+                        </a>
+                    </div>
+
+                    <!-- Statistiques -->
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <i class="fas fa-file-alt"></i>
+                            <div class="stat-number" id="stat-declares">-</div>
+                            <div class="stat-label">Déclarés</div>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-check-circle"></i>
+                            <div class="stat-number" id="stat-retrouves">-</div>
+                            <div class="stat-label">Retrouvés</div>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-users"></i>
+                            <div class="stat-number" id="stat-membres">-</div>
+                            <div class="stat-label">Membres</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-images">
+                    <div class="document-showcase">
+                        <!-- Image 1 : CNI -->
+                        <div class="doc-card doc-1">
+                            <div class="doc-icon"><i class="fas fa-id-card"></i></div>
+                            <div class="doc-label">CNI</div>
+                        </div>
+                        <!-- Image 2 : Passeport -->
+                        <div class="doc-card doc-2">
+                            <div class="doc-icon"><i class="fas fa-passport"></i></div>
+                            <div class="doc-label">Passeport</div>
+                        </div>
+                        <!-- Image 3 : Acte de naissance -->
+                        <div class="doc-card doc-3">
+                            <div class="doc-icon"><i class="fas fa-certificate"></i></div>
+                            <div class="doc-label">Acte de naissance</div>
+                        </div>
+                        <!-- Image 4 : Permis -->
+                        <div class="doc-card doc-4">
+                            <div class="doc-icon"><i class="fas fa-car"></i></div>
+                            <div class="doc-label">Permis de conduire</div>
+                        </div>
+                        <!-- Image 5 : Diplôme -->
+                        <div class="doc-card doc-5">
+                            <div class="doc-icon"><i class="fas fa-graduation-cap"></i></div>
+                            <div class="doc-label">Diplôme</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION FONCTIONNALITÉS -->
+    <section class="features-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Comment ça marche ?</h2>
+                <p>Trois étapes simples pour retrouver vos documents</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <h3>1. Créez un compte</h3>
+                    <p>Inscrivez-vous gratuitement en quelques secondes</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-upload"></i>
+                    </div>
+                    <h3>2. Déclarez ou recherchez</h3>
+                    <p>Déclarez un document perdu ou recherchez un document trouvé</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <h3>3. Récupérez votre document</h3>
+                    <p>Notre système intelligent vous met en relation automatiquement</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION AVANTAGES -->
+    <section class="advantages-section">
+        <div class="container">
+            <div class="advantages-grid">
+                <div class="advantage-item">
+                    <i class="fas fa-brain"></i>
+                    <h3>Recherche Intelligente</h3>
+                    <p>Algorithme de fuzzy matching tolérant aux fautes de frappe</p>
+                </div>
+                <div class="advantage-item">
+                    <i class="fas fa-link"></i>
+                    <h3>Correspondances Automatiques</h3>
+                    <p>Matching automatique entre documents perdus et trouvés</p>
+                </div>
+                <div class="advantage-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>100% Sécurisé</h3>
+                    <p>Vos données sont protégées avec JWT et bcrypt</p>
+                </div>
+                <div class="advantage-item">
+                    <i class="fas fa-bolt"></i>
+                    <h3>Rapide et Efficace</h3>
+                    <p>Trouvez vos documents en quelques clics</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION TYPES DE DOCUMENTS -->
+    <section class="documents-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Documents pris en charge</h2>
+                <p>Nous gérons tous types de documents officiels</p>
+            </div>
+
+            <div class="documents-grid">
+                <div class="doc-type-card">
+                    <i class="fas fa-id-card"></i>
+                    <h4>Cartes d'identité</h4>
+                </div>
+                <div class="doc-type-card">
+                    <i class="fas fa-passport"></i>
+                    <h4>Passeports</h4>
+                </div>
+                <div class="doc-type-card">
+                    <i class="fas fa-certificate"></i>
+                    <h4>Actes de naissance</h4>
+                </div>
+                <div class="doc-type-card">
+                    <i class="fas fa-car"></i>
+                    <h4>Permis de conduire</h4>
+                </div>
+                <div class="doc-type-card">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h4>Diplômes</h4>
+                </div>
+                <div class="doc-type-card">
+                    <i class="fas fa-file-alt"></i>
+                    <h4>Autres documents</h4>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <i class="fas fa-file-shield"></i>
+                        <span>SmartSearch</span>
+                    </div>
+                    <p>La plateforme #1 au Cameroun pour retrouver vos documents perdus.</p>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Liens rapides</h4>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="recherche.html">Rechercher</a></li>
+                        <li><a href="declaration.html">Déclarer</a></li>
+                        <li><a href="login.html">Connexion</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#aide">Centre d'aide</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                        <li><a href="#cgv">CGV</a></li>
+                        <li><a href="#privacy">Confidentialité</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-section">
+                    <h4>Suivez-nous</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 SmartSearch. Tous droits réservés. | Développé par HERVEMEUPS</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const API_URL = "http://localhost:3000";
+
+        // Vérifier si l'utilisateur est connecté
+        window.addEventListener("DOMContentLoaded", () => {
+            checkAuth();
+            loadStats();
+        });
+
+        function checkAuth() {
+            const token = localStorage.getItem("token");
+            const username = localStorage.getItem("username");
+            const role = localStorage.getItem("role");
+            const authBtn = document.getElementById("auth-btn");
+
+            if (token && username) {
+                authBtn.innerHTML = `<i class="fas fa-user"></i> ${username}`;
+                authBtn.href = "#";
+                authBtn.onclick = showUserMenu;
+
+                // Afficher les liens admin si rôle = admin
+                if (role === "admin") {
+                    document.getElementById("nav-dashboard").style.display = "block";
+                    document.getElementById("nav-admin-docs").style.display = "block";
+                }
+            }
+        }
+
+        function showUserMenu(e) {
+            e.preventDefault();
+            const role = localStorage.getItem("role");
+            if (role === "admin") {
+                window.location.href = "dashboard.html";
+            } else {
+                window.location.href = "declaration.html";
+            }
+        }
+
+        // Charger les statistiques
+        async function loadStats() {
+            try {
+                // Utiliser la route publique pour les stats de base
+                const response = await fetch(`${API_URL}/stats-public`);
+
+                if (response.ok) {
+                    const stats = await response.json();
+                    document.getElementById("stat-declares").textContent = stats.declares || 0;
+                    document.getElementById("stat-retrouves").textContent = stats.retrouves || 0;
+                    document.getElementById("stat-membres").textContent = stats.membres || 0;
+                } else {
+                    // En cas d'erreur, afficher 0
+                    document.getElementById("stat-declares").textContent = "0";
+                    document.getElementById("stat-retrouves").textContent = "0";
+                    document.getElementById("stat-membres").textContent = "0";
+                }
+            } catch (error) {
+                console.error("Erreur chargement stats:", error);
+                // En cas d'erreur réseau, afficher un message
+                document.getElementById("stat-declares").textContent = "-";
+                document.getElementById("stat-retrouves").textContent = "-";
+                document.getElementById("stat-membres").textContent = "-";
+            }
+        }
+
+        function toggleMobileMenu() {
+            const navLinks = document.querySelector('.nav-links');
+            navLinks.classList.toggle('active');
+        }
+    </script>
+
 </body>
 
 </html>

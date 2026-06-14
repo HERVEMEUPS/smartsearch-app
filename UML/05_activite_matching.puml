@@ -1,0 +1,99 @@
+@startuml Diagramme d'Activités - Matching Automatique
+
+title Diagramme d'Activités\nAlgorithme de Matching Automatique Perdu ↔ Trouvé
+
+start
+
+:Récupérer tous les documents;
+
+:Séparer en deux listes:\n- Documents perdus\n- Documents trouvés;
+
+partition "Pour chaque document perdu" {
+  :Sélectionner document perdu i;
+
+  partition "Pour chaque document trouvé" {
+    :Sélectionner document trouvé j;
+
+    :Calculer score de correspondance;
+    note right
+      **Critères de matching :**
+      - Type document : 30%
+      - Nom : 40%
+      - Numéro : 20%
+      - Lieu : 10%
+      - Proximité temporelle : bonus
+    end note
+
+    ' Calcul du type
+    :Comparer types de documents\nSimilarité = compareTwoStrings(type_i, type_j);
+    :Score += similarité × 30;
+
+    ' Calcul du nom
+    :Comparer noms\nSimilarité = compareTwoStrings(nom_i, nom_j);
+    :Score += similarité × 40;
+
+    ' Calcul du numéro
+    if (Les deux ont un numéro?) then (oui)
+      if (Numéros identiques?) then (oui)
+        :Score += 20;
+      else (non)
+        :Calculer similarité numéros;
+        :Score += similarité × 20;
+      endif
+    endif
+
+    ' Calcul du lieu
+    :Comparer lieux\nSimilarité = compareTwoStrings(lieu_i, lieu_j);
+    :Score += similarité × 10;
+
+    ' Bonus temporel
+    :Calculer écart de dates;
+    if (Écart <= 7 jours?) then (oui)
+      :Score += 10 (bonus);
+    endif
+
+    :Score total = arrondi(score);
+
+    ' Décision
+    if (Score >= 70?) then (oui)
+      :Créer correspondance;
+      note right
+        **Niveau de confiance :**
+        - Score >= 90% : Très élevée
+        - Score >= 80% : Élevée
+        - Score >= 70% : Moyenne
+      end note
+
+      :Ajouter aux matches;
+    else (non)
+      :Ignorer (score trop faible);
+    endif
+  }
+}
+
+:Trier matches par score décroissant;
+
+if (Des correspondances trouvées?) then (oui)
+  :Retourner liste de correspondances\navec scores et détails;
+
+  :Optionnel: Notifier les déclarants\npar email;
+else (non)
+  :Retourner liste vide;
+endif
+
+stop
+
+note bottom
+  **Exemple de matching :**
+  Document perdu : CNI DUPONT Jean, n°123456, Yaoundé
+  Document trouvé : CNI DUPON Jean, n°123456, Yaounde
+
+  Calcul :
+  - Type identique : 30 pts
+  - Nom 95% similaire : 38 pts
+  - Numéro identique : 20 pts
+  - Lieu 90% similaire : 9 pts
+  = **97 points** → Confiance très élevée
+end note
+
+@enduml

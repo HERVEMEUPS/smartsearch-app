@@ -1,0 +1,153 @@
+<!--
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Recherche</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <h2>Recherche de document</h2>
+
+    <form id="rechercheForm">
+
+        <label>Type de document</label>
+        <input type="text" id="rTypeDocument">
+
+        <label>Nom du propriétaire</label>
+        <input type="text" id="rNom">
+
+        <label>Numéro du document</label>
+        <input type="text" id="rNumero">
+        <label>Type de déclaration</label>
+        <select id="rTypeDeclaration">
+            <option value="">Tous</option>
+            <option value="perdu">Perdu</option>
+            <option value="trouve">Trouvé</option>
+        </select>
+
+        <label>Lieu</label>
+        <input type="text" id="rLieu">
+
+        <label>Date début</label>
+        <input type="date" id="rDateDebut">
+
+        <label>Date fin</label>
+        <input type="date" id="rDateFin">
+
+
+        <button type="submit">Rechercher</button>
+    </form>
+
+    <div id="resultats"></div>
+
+    <a href="index.html">⬅ Retour</a>
+
+    <script src="script.js"></script>
+</body>
+
+</html> -->
+
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Recherche - SmartSearch</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .page-header .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .page-header .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .page-header .logo i {
+            font-size: 28px;
+        }
+        .page-header .user-info {
+            color: white;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header avec logo SmartSearch -->
+    <header class="page-header">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-file-shield"></i>
+                <span>SmartSearch</span>
+            </a>
+            <div id="userInfo" class="user-info"></div>
+        </div>
+    </header>
+
+    <h1>Recherche de documents perdus / retrouvés</h1>
+
+    <!-- FORMULAIRE DE RECHERCHE -->
+    <form id="rechercheForm">
+
+        <label>Type de déclaration</label>
+        <select id="r_typeDeclaration">
+            <option value="">-- Tous --</option>
+            <option value="perdu">Perdu</option>
+            <option value="retrouvé">Retrouvé</option>
+        </select>
+
+        <label>Type de document</label>
+        <input type="text" id="r_typeDocument" placeholder="Ex: CNI, Passeport">
+
+        <label>Nom du propriétaire</label>
+        <input type="text" id="r_nom" placeholder="Nom sur le document">
+
+        <label>Numéro du document</label>
+        <input type="text" id="r_numero" placeholder="Numéro exact">
+
+        <label>Lieu</label>
+        <input type="text" id="r_lieu" placeholder="Lieu de perte ou découverte">
+
+        <label>Date début</label>
+        <input type="date" id="r_dateDebut">
+
+        <label>Date fin</label>
+        <input type="date" id="r_dateFin">
+
+        <button type="submit">🔍 Rechercher</button>
+    </form>
+
+    <!-- ZONE D’AFFICHAGE DES RÉSULTATS -->
+    <h2>Résultats</h2>
+    <div id="resultats"></div>
+
+    <!-- LIEN RETOUR -->
+    <br>
+    <a href="index.html">⬅ Retour à l’accueil</a>
+
+    <!-- SCRIPT -->
+    <script src="script.js"></script>
+
+</body>
+
+</html>

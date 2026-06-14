@@ -1,0 +1,84 @@
+@startuml Diagramme de Cas d'Utilisation - Système de Documents Perdus
+
+' Titre
+title Diagramme de Cas d'Utilisation\nSystème Intelligent de Documents Perdus
+
+' Acteurs
+actor "Visiteur" as Visiteur
+actor "Déclarant" as Declarant
+actor "Administrateur" as Admin
+
+' Héritage
+Declarant --|> Visiteur
+Admin --|> Declarant
+
+' Package Authentification
+rectangle "Authentification" {
+  usecase "S'inscrire" as UC1
+  usecase "Se connecter" as UC2
+  usecase "Se déconnecter" as UC3
+}
+
+' Package Déclaration
+rectangle "Gestion des Déclarations" {
+  usecase "Déclarer un document perdu" as UC4
+  usecase "Déclarer un document trouvé" as UC5
+  usecase "Consulter ses déclarations" as UC6
+}
+
+' Package Recherche
+rectangle "Recherche Intelligente" {
+  usecase "Rechercher des documents" as UC7
+  usecase "Utiliser la recherche floue" as UC8
+  usecase "Voir les correspondances" as UC9
+  usecase "Obtenir des suggestions" as UC10
+}
+
+' Package Administration
+rectangle "Administration" {
+  usecase "Consulter le dashboard" as UC11
+  usecase "Voir les statistiques" as UC12
+  usecase "Gérer les utilisateurs" as UC13
+  usecase "Consulter les correspondances automatiques" as UC14
+  usecase "Exporter les données" as UC15
+}
+
+' Relations Visiteur
+Visiteur --> UC1
+Visiteur --> UC2
+
+' Relations Déclarant
+Declarant --> UC3
+Declarant --> UC4
+Declarant --> UC5
+Declarant --> UC6
+Declarant --> UC7
+Declarant --> UC9
+
+' Relations Admin
+Admin --> UC11
+Admin --> UC12
+Admin --> UC13
+Admin --> UC14
+Admin --> UC15
+
+' Relations d'inclusion et extension
+UC7 ..> UC8 : <<include>>
+UC7 ..> UC10 : <<include>>
+UC11 ..> UC12 : <<include>>
+UC11 ..> UC14 : <<include>>
+
+' Note
+note right of UC8
+  Algorithme de fuzzy matching
+  Tolère les fautes de frappe
+  (Levenshtein distance)
+end note
+
+note right of UC14
+  Matching automatique
+  Perdu ↔ Trouvé
+  Score de confiance
+end note
+
+@enduml

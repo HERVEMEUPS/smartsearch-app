@@ -1,0 +1,63 @@
+# Git
+.git
+.gitignore
+
+# Node.js
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+logs
+*.log
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist
+build
+*.egg-info
+
+# Test
+coverage
+.nyc_output
+.pytest_cache
+
+# Documentation
+*.md
+docs/
+
+# Data
+*.json
+*.db
+*.sqlite
+uploads/
+cache/
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore

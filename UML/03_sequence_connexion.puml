@@ -1,0 +1,67 @@
+@startuml Diagramme de Séquence - Connexion Utilisateur
+
+title Diagramme de Séquence\nConnexion Utilisateur avec JWT
+
+actor "Utilisateur" as User
+participant "Frontend\n(login.html)" as Frontend
+participant "API REST\n(server.js)" as API
+participant "AuthService" as Auth
+database "users.json" as DB
+
+User -> Frontend : Saisit identifiants
+activate Frontend
+
+Frontend -> Frontend : Validation locale\n(champs remplis)
+
+Frontend -> API : POST /login\n{username, password}
+activate API
+
+API -> DB : Lire users.json
+activate DB
+DB --> API : Liste utilisateurs
+deactivate DB
+
+API -> API : Chercher utilisateur\npar username
+
+alt Utilisateur non trouvé
+    API --> Frontend : 401 Unauthorized\n{"message": "Identifiants incorrects"}
+    Frontend --> User : Afficher erreur
+else Utilisateur trouvé
+    API -> Auth : comparer(password, hashStocké)
+    activate Auth
+    Auth -> Auth : bcrypt.compare()
+
+    alt Mot de passe invalide
+        Auth --> API : false
+        API --> Frontend : 401 Unauthorized\n{"message": "Identifiants incorrects"}
+        Frontend --> User : Afficher erreur
+    else Mot de passe valide
+        Auth --> API : true
+        deactivate Auth
+
+        API -> Auth : genererToken(user)
+        activate Auth
+        Auth -> Auth : jwt.sign(\n  {id, username, role},\n  JWT_SECRET,\n  {expiresIn: '24h'}\n)
+        Auth --> API : token JWT
+        deactivate Auth
+
+        API --> Frontend : 200 OK\n{\n  "token": "eyJhbGc...",\n  "role": "declarant",\n  "username": "user"\n}
+
+        Frontend -> Frontend : Stocker token\nlocalStorage.setItem("token", ...)
+        Frontend -> Frontend : Stocker username/role
+
+        Frontend --> User : Redirection vers\nindex.html (ou admin.html)
+    end
+end
+
+deactivate API
+deactivate Frontend
+
+note right of Auth
+  Sécurité :
+  - Mot de passe haché (bcrypt)
+  - Token JWT signé
+  - Expiration 24h
+end note
+
+@enduml

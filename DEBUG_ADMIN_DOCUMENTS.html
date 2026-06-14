@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Admin Documents</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        h2 { color: #667eea; margin-top: 0; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border-left: 4px solid #667eea;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.warning { background: #fff3cd; color: #856404; }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover { background: #5568d3; }
+        .log {
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .log-entry {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .log-entry.error { color: #dc3545; }
+        .log-entry.success { color: #28a745; }
+        .log-entry.info { color: #17a2b8; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug - Gestion des Documents Admin</h1>
+    <p>Cet outil permet de diagnostiquer pourquoi la page admin-documents.html est vide</p>
+
+    <div class="debug-card">
+        <h2>1️⃣ Authentification</h2>
+        <div id="auth-status"></div>
+        <button onclick="checkAuth()">Vérifier Auth</button>
+        <button onclick="testLogin()">Test Login Admin</button>
+    </div>
+
+    <div class="debug-card">
+        <h2>2️⃣ API Documents</h2>
+        <div id="api-status"></div>
+        <button onclick="testDocumentsAPI()">Tester /documents</button>
+        <button onclick="testCorrespondancesAPI()">Tester /correspondances</button>
+    </div>
+
+    <div class="debug-card">
+        <h2>3️⃣ Données Brutes</h2>
+        <div id="raw-data">
+            <p>Cliquez sur "Tester /documents" pour voir les données</p>
+        </div>
+    </div>
+
+    <div class="debug-card">
+        <h2>4️⃣ Console de Débogage</h2>
+        <div id="debug-log" class="log"></div>
+        <button onclick="clearLog()">Effacer</button>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:3000";
+        let currentToken = null;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('debug-log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.insertBefore(entry, logDiv.firstChild);
+            console.log(message);
+        }
+
+        function clearLog() {
+            document.getElementById('debug-log').innerHTML = '';
+        }
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+            const username = localStorage.getItem('username');
+
+            const statusDiv = document.getElementById('auth-status');
+
+            if (token && role && username) {
+                statusDiv.innerHTML = `
+                    <div class="status success">✓ Authentifié</div>
+                    <p><strong>Username:</strong> ${username}</p>
+                    <p><strong>Role:</strong> ${role}</p>
+                    <p><strong>Token:</strong> ${token.substring(0, 20)}...</p>
+                `;
+                currentToken = token;
+                log('Authentification trouvée dans localStorage', 'success');
+            } else {
+                statusDiv.innerHTML = `
+                    <div class="status error">✗ Non authentifié</div>
+                    <p>Aucun token trouvé dans localStorage</p>
+                `;
+                log('Pas de token dans localStorage', 'error');
+            }
+        }
+
+        async function testLogin() {
+            log('Tentative de connexion en tant qu\'admin...', 'info');
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('role', data.role);
+                    localStorage.setItem('username', data.username);
+                    currentToken = data.token;
+
+                    log('✓ Connexion réussie', 'success');
+                    checkAuth();
+                } else {
+                    const error = await response.json();
+                    log(`✗ Erreur login: ${error.message}`, 'error');
+                }
+            } catch (error) {
+                log(`✗ Erreur réseau: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDocumentsAPI() {
+            const apiStatusDiv = document.getElementById('api-status');
+            const rawDataDiv = document.getElementById('raw-data');
+
+            if (!currentToken) {
+                currentToken = localStorage.getItem('token');
+                if (!currentToken) {
+                    apiStatusDiv.innerHTML = '<div class="status error">✗ Pas de token. Connectez-vous d\'abord.</div>';
+                    log('Pas de token pour tester l\'API', 'error');
+                    return;
+                }
+            }
+
+            log('Test de la route GET /documents...', 'info');
+
+            try {
+                const response = await fetch(`${API_URL}/documents`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+
+                log(`Statut de réponse: ${response.status}`, 'info');
+
+                if (response.ok) {
+                    const documents = await response.json();
+                    log(`✓ API /documents : ${documents.length} documents reçus`, 'success');
+
+                    apiStatusDiv.innerHTML = `
+                        <div class="status success">✓ API Documents Fonctionnelle</div>
+                        <p><strong>Nombre de documents:</strong> ${documents.length}</p>
+                    `;
+
+                    rawDataDiv.innerHTML = `
+                        <h3>Documents reçus (${documents.length})</h3>
+                        <pre>${JSON.stringify(documents, null, 2)}</pre>
+                    `;
+
+                    // Analyser les documents
+                    const perdus = documents.filter(d => d.typeDeclaration === 'perdu');
+                    const trouves = documents.filter(d => d.typeDeclaration === 'trouve' || d.typeDeclaration === 'trouvé');
+
+                    log(`Analyse: ${perdus.length} perdus, ${trouves.length} trouvés`, 'info');
+
+                } else {
+                    const error = await response.json();
+                    log(`✗ Erreur API: ${error.message}`, 'error');
+                    apiStatusDiv.innerHTML = `
+                        <div class="status error">✗ Erreur ${response.status}</div>
+                        <p>${error.message}</p>
+                    `;
+                }
+            } catch (error) {
+                log(`✗ Erreur réseau: ${error.message}`, 'error');
+                apiStatusDiv.innerHTML = `
+                    <div class="status error">✗ Erreur réseau</div>
+                    <p>${error.message}</p>
+                    <p>Vérifiez que le serveur tourne sur ${API_URL}</p>
+                `;
+            }
+        }
+
+        async function testCorrespondancesAPI() {
+            if (!currentToken) {
+                currentToken = localStorage.getItem('token');
+                if (!currentToken) {
+                    log('Pas de token pour tester l\'API correspondances', 'error');
+                    return;
+                }
+            }
+
+            log('Test de la route GET /correspondances...', 'info');
+
+            try {
+                const response = await fetch(`${API_URL}/correspondances`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✓ API /correspondances : ${data.total} correspondances`, 'success');
+                } else {
+                    const error = await response.json();
+                    log(`✗ Erreur API correspondances: ${error.message}`, 'error');
+                }
+            } catch (error) {
+                log(`✗ Erreur réseau: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-vérification au chargement
+        window.addEventListener('DOMContentLoaded', () => {
+            log('Page de debug chargée', 'info');
+            checkAuth();
+        });
+    </script>
+</body>
+</html>
