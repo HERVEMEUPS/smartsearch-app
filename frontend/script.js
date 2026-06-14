@@ -94,7 +94,8 @@ console.log("script.js chargé");
 /***************************************
  * CONFIGURATION GLOBALE
  ***************************************/
-const API_URL = "http://localhost:3000";
+const API_URL = "https://smartsearch-backend-pxw5.onrender.com";
+
 
 /***************************************
  * VÉRIFICATION DE L'AUTHENTIFICATION
