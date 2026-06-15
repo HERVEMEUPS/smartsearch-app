@@ -112,12 +112,21 @@
         <label>Type de déclaration</label>
         <select id="r_typeDeclaration">
             <option value="">-- Tous --</option>
-            <option value="perdu">Perdu</option>
-            <option value="retrouvé">Retrouvé</option>
+            <option value="PERTE">📍 Perdu</option>
+            <option value="DECOUVERTE">✅ Trouvé</option>
         </select>
 
         <label>Type de document</label>
-        <input type="text" id="r_typeDocument" placeholder="Ex: CNI, Passeport">
+        <select id="r_typeDocument">
+            <option value="">-- Tous --</option>
+            <option value="CNI">CNI (Carte Nationale d'Identité)</option>
+            <option value="PASSEPORT">Passeport</option>
+            <option value="PERMIS">Permis de Conduire</option>
+            <option value="CARTE_SCOLAIRE">Carte Scolaire</option>
+            <option value="DIPLOME">Diplôme</option>
+            <option value="ACTE_NAISSANCE">Acte de Naissance</option>
+            <option value="AUTRE">Autre</option>
+        </select>
 
         <label>Nom du propriétaire</label>
         <input type="text" id="r_nom" placeholder="Nom sur le document">

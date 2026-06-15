@@ -494,18 +494,30 @@ function afficherResultats(documents) {
             'Non spécifié';
 
         // Badge de type
-        const typeBadge = doc.type === 'perdu' ?
+        const typeBadge = doc.type === 'PERTE' ?
             '<span style="background: #dc3545; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;">📍 PERDU</span>' :
-            '<span style="background: #28a745; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;">✅ RETROUVÉ</span>';
+            '<span style="background: #28a745; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;">✅ TROUVÉ</span>';
 
         // Badge de statut
-        const statutBadge = doc.statut === 'actif' ?
+        const statutBadge = doc.statut === 'ACTIF' || doc.statut === 'actif' ?
             '<span style="background: #ffc107; color: black; padding: 5px 10px; border-radius: 5px; font-size: 12px;">🔔 Actif</span>' :
             '<span style="background: #6c757d; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;">✔️ Résolu</span>';
 
+        // Formater le type de document
+        const typeDocumentMap = {
+            'CNI': 'CNI',
+            'PASSEPORT': 'Passeport',
+            'PERMIS': 'Permis de Conduire',
+            'CARTE_SCOLAIRE': 'Carte Scolaire',
+            'DIPLOME': 'Diplôme',
+            'ACTE_NAISSANCE': 'Acte de Naissance',
+            'AUTRE': 'Autre'
+        };
+        const typeDocumentAffiche = typeDocumentMap[doc.typeDocument] || doc.typeDocument;
+
         card.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                <h3 style="margin: 0;">${doc.typeDocument}</h3>
+                <h3 style="margin: 0;">${typeDocumentAffiche}</h3>
                 <div style="display: flex; gap: 10px;">
                     ${typeBadge}
                     ${statutBadge}
