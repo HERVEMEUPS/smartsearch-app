@@ -381,20 +381,27 @@
 
             try {
                 // Récupérer les statistiques
-                const response = await fetch(`${API_URL}/statistiques`, {
+                console.log('📊 Chargement des statistiques...');
+                const response = await fetch(`${API_URL}/api/admin/statistics`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
+                console.log('📡 Réponse:', response.status, response.statusText);
+
                 if (!response.ok) {
                     if (response.status === 401 || response.status === 403) {
+                        console.error('❌ Non autorisé');
                         localStorage.clear();
                         window.location.href = "login.html";
                         return;
                     }
-                    throw new Error("Erreur de chargement");
+                    const errorText = await response.text();
+                    console.error('❌ Erreur:', errorText);
+                    throw new Error("Erreur de chargement: " + response.status);
                 }
 
                 const stats = await response.json();
+                console.log('✅ Statistiques reçues:', stats);
 
                 // Afficher les stats
                 document.getElementById("stat-total").textContent = stats.total;
@@ -506,12 +513,13 @@
 
         async function loadUsersStats(token) {
             try {
-                const response = await fetch(`${API_URL}/users-stats`, {
+                const response = await fetch(`${API_URL}/api/admin/users/statistics`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
                 if (!response.ok) {
-                    console.error("Erreur chargement stats utilisateurs");
+                    console.error("Erreur chargement stats utilisateurs:", response.status);
+                    // Ne pas bloquer le dashboard si les stats utilisateurs échouent
                     return;
                 }
 
@@ -570,11 +578,14 @@
 
         async function loadMatches(token) {
             try {
-                const response = await fetch(`${API_URL}/correspondances`, {
+                const response = await fetch(`${API_URL}/api/correspondances`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
-                if (!response.ok) throw new Error("Erreur");
+                if (!response.ok) {
+                    console.error("Erreur chargement correspondances:", response.status);
+                    return;
+                }
 
                 const data = await response.json();
                 const matchesList = document.getElementById("matches-list");
