@@ -261,7 +261,8 @@ class DeclarationService {
       byType,
       byDocument,
       byStatut,
-      byVille
+      byVille,
+      byMonth
     ] = await Promise.all([
       Declaration.countDocuments(query),
 
@@ -286,15 +287,50 @@ class DeclarationService {
         { $group: { _id: '$localisation.ville', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
         { $limit: 10 }
+      ]),
+
+      Declaration.aggregate([
+        { $match: query },
+        {
+          $group: {
+            _id: {
+              year: { $year: '$createdAt' },
+              month: { $month: '$createdAt' }
+            },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { '_id.year': 1, '_id.month': 1 } },
+        { $limit: 12 }
       ])
+    ]);
+
+    const byTypeObj = byType.reduce((acc, { _id, count }) => {
+      acc[_id] = count;
+      return acc;
+    }, {});
+
+    const perdus = byTypeObj.PERTE || 0;
+    const trouves = byTypeObj.DECOUVERTE || 0;
+    const tauxRecuperation = total > 0 ? Math.round((trouves / total) * 100) : 0;
+
+    // Formater les mois pour le frontend
+    const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+    const parMois = byMonth.map(({ _id, count }) => [
+      `${monthNames[_id.month - 1]} ${_id.year}`,
+      count
     ]);
 
     return {
       total,
-      byType: byType.reduce((acc, { _id, count }) => {
-        acc[_id] = count;
-        return acc;
-      }, {}),
+      perdus,
+      trouves,
+      correspondances: 0, // Sera calculé par matchingService
+      tauxRecuperation,
+      byType: byTypeObj,
+      parType: byDocument.map(({ _id, count }) => [_id, count]),
+      parLieu: byVille.map(({ _id, count }) => [_id || 'Non spécifié', count]),
+      parMois,
       byDocument: byDocument.map(({ _id, count }) => ({ document: _id, count })),
       byStatut: byStatut.reduce((acc, { _id, count }) => {
         acc[_id] = count;
