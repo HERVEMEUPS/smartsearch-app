@@ -60,7 +60,21 @@ class DeclarationService {
 
     // Filtres
     if (filters.type) {
-      query.type = filters.type;
+      // Accepter les anciennes et nouvelles valeurs
+      const typeMapping = {
+        'PERTE': ['PERTE', 'Perdu', 'perdu'],
+        'DECOUVERTE': ['DECOUVERTE', 'Trouvé', 'trouve', 'retrouvé']
+      };
+
+      if (typeMapping[filters.type]) {
+        query.type = { $in: typeMapping[filters.type] };
+      } else if (filters.type === 'Perdu' || filters.type === 'perdu') {
+        query.type = { $in: ['PERTE', 'Perdu', 'perdu'] };
+      } else if (filters.type === 'Trouvé' || filters.type === 'trouve' || filters.type === 'retrouvé') {
+        query.type = { $in: ['DECOUVERTE', 'Trouvé', 'trouve', 'retrouvé'] };
+      } else {
+        query.type = filters.type;
+      }
     }
 
     if (filters.typeDocument) {
