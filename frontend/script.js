@@ -153,13 +153,18 @@ if (loginForm) {
                 return;
             }
 
-            // Sauvegarde du token et des infos utilisateur
-            localStorage.setItem("token", data.token);
-            localStorage.setItem("username", data.username);
-            localStorage.setItem("role", data.role);
+            // Sauvegarde du token et des infos utilisateur (MongoDB backend structure)
+            const token = data.data?.accessToken || data.token;
+            const user = data.data?.user || data;
+            const username = user.username || data.username;
+            const role = user.role || data.role;
+
+            localStorage.setItem("token", token);
+            localStorage.setItem("username", username);
+            localStorage.setItem("role", role);
 
             // Redirection selon le rôle
-            if (data.role === "admin") {
+            if (role === "admin") {
                 window.location.href = "dashboard.html";
             } else {
                 window.location.href = "index.html";
