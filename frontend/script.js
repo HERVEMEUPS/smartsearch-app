@@ -414,22 +414,35 @@ if (rechercheForm) {
         }
 
         // Construction des paramètres de recherche
-        const params = new URLSearchParams({
-            typeDeclaration: document.getElementById("r_typeDeclaration").value,
-            typeDocument: document.getElementById("r_typeDocument").value,
-            nom: document.getElementById("r_nom").value,
-            numero: document.getElementById("r_numero").value,
-            lieu: document.getElementById("r_lieu").value,
-            dateDebut: document.getElementById("r_dateDebut").value,
-            dateFin: document.getElementById("r_dateFin").value
-        });
+        const params = new URLSearchParams();
+
+        const typeDeclaration = document.getElementById("r_typeDeclaration").value;
+        const typeDocument = document.getElementById("r_typeDocument").value;
+        const nom = document.getElementById("r_nom").value;
+        const numero = document.getElementById("r_numero").value;
+        const lieu = document.getElementById("r_lieu").value;
+        const dateDebut = document.getElementById("r_dateDebut").value;
+        const dateFin = document.getElementById("r_dateFin").value;
+
+        // Ajouter seulement les paramètres non vides
+        if (typeDeclaration) params.append("type", typeDeclaration);
+        if (typeDocument) params.append("typeDocument", typeDocument);
+        if (nom) params.append("search", nom);
+        if (numero) params.append("search", numero);
+        if (lieu) params.append("ville", lieu);
+        if (dateDebut) params.append("dateDebut", dateDebut);
+        if (dateFin) params.append("dateFin", dateFin);
+
+        console.log("🔍 Recherche avec paramètres:", Object.fromEntries(params));
 
         try {
-            const response = await fetch(`${API_URL}/recherche?${params.toString()}`, {
+            const response = await fetch(`${API_URL}/api/declarations?${params.toString()}`, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
             });
+
+            console.log("📡 Réponse recherche:", response.status, response.statusText);
 
             if (!response.ok) {
                 if (response.status === 401 || response.status === 403) {
@@ -441,7 +454,11 @@ if (rechercheForm) {
                 throw new Error("Erreur de recherche");
             }
 
-            const documents = await response.json();
+            const result = await response.json();
+            console.log("📦 Données reçues:", result);
+
+            // Extraire les déclarations du format {success: true, data: [...]}
+            const documents = result.success ? result.data : result;
             afficherResultats(documents);
         } catch (error) {
             resultatsDiv.innerHTML = "<p>Erreur lors de la recherche</p>";
@@ -456,23 +473,51 @@ if (rechercheForm) {
 function afficherResultats(documents) {
     resultatsDiv.innerHTML = "";
 
-    if (documents.length === 0) {
-        resultatsDiv.innerHTML = "<p>Aucun document trouvé</p>";
+    if (!documents || documents.length === 0) {
+        resultatsDiv.innerHTML = "<p>Aucun document trouvé. Essayez avec d'autres critères de recherche.</p>";
         return;
     }
+
+    console.log(`📊 Affichage de ${documents.length} résultat(s)`);
 
     documents.forEach(doc => {
         const card = document.createElement("div");
         card.className = "result-card";
 
+        // Date formatée
+        const dateEvenement = doc.dateEvenement ? new Date(doc.dateEvenement).toLocaleDateString('fr-FR') : 'N/A';
+        const dateCreation = doc.createdAt ? new Date(doc.createdAt).toLocaleDateString('fr-FR') : 'N/A';
+
+        // Localisation
+        const lieu = doc.localisation ?
+            `${doc.localisation.ville || ''}${doc.localisation.quartier ? ', ' + doc.localisation.quartier : ''}` :
+            'Non spécifié';
+
+        // Badge de type
+        const typeBadge = doc.type === 'perdu' ?
+            '<span style="background: #dc3545; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;">📍 PERDU</span>' :
+            '<span style="background: #28a745; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;">✅ RETROUVÉ</span>';
+
+        // Badge de statut
+        const statutBadge = doc.statut === 'actif' ?
+            '<span style="background: #ffc107; color: black; padding: 5px 10px; border-radius: 5px; font-size: 12px;">🔔 Actif</span>' :
+            '<span style="background: #6c757d; color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;">✔️ Résolu</span>';
+
         card.innerHTML = `
-            <h3>${doc.typeDocument}</h3>
-            <p><strong>Nom :</strong> ${doc.nom}</p>
-            <p><strong>Numéro :</strong> ${doc.numero || "N/A"}</p>
-            <p><strong>Lieu :</strong> ${doc.lieu}</p>
-            <p><strong>Date :</strong> ${doc.date}</p>
-            <p><strong>Type :</strong> ${doc.typeDeclaration}</p>
-            <p><strong>Score :</strong> ${doc.score}</p>
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                <h3 style="margin: 0;">${doc.typeDocument}</h3>
+                <div style="display: flex; gap: 10px;">
+                    ${typeBadge}
+                    ${statutBadge}
+                </div>
+            </div>
+            <p><strong>Nom partiel :</strong> ${doc.nomPartiel || 'Non renseigné'}</p>
+            <p><strong>Numéro partiel :</strong> ${doc.numeroPartiel || 'Non renseigné'}</p>
+            <p><strong>Lieu :</strong> ${lieu}</p>
+            <p><strong>Date de l'événement :</strong> ${dateEvenement}</p>
+            <p><strong>Description :</strong> ${doc.description || 'Aucune description'}</p>
+            <p style="font-size: 12px; color: #6c757d;"><strong>Déclaré le :</strong> ${dateCreation}</p>
+            ${doc.utilisateur ? `<p style="font-size: 12px; color: #6c757d;"><strong>Par :</strong> ${doc.utilisateur.username || 'Utilisateur inconnu'}</p>` : ''}
         `;
 
         resultatsDiv.appendChild(card);
