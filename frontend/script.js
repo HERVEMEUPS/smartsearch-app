@@ -139,6 +139,10 @@ if (loginForm) {
         const username = document.getElementById("username").value;
         const password = document.getElementById("password").value;
 
+        console.log('🔐 Tentative de connexion:', username);
+        message.textContent = "Connexion en cours...";
+        message.style.color = "blue";
+
         try {
             const response = await fetch(`${API_URL}/api/auth/login`, {
                 method: "POST",
@@ -146,32 +150,45 @@ if (loginForm) {
                 body: JSON.stringify({ username, password })
             });
 
+            console.log('📡 Réponse reçue:', response.status, response.statusText);
+
             const data = await response.json();
+            console.log('📦 Data:', data);
 
             if (!response.ok) {
-                message.textContent = data.message;
+                message.textContent = data.message || "Erreur de connexion";
+                message.style.color = "red";
                 return;
             }
 
             // Sauvegarde du token et des infos utilisateur (MongoDB backend structure)
             const token = data.data?.accessToken || data.token;
             const user = data.data?.user || data;
-            const username = user.username || data.username;
+            const usernameToStore = user.username || data.username;
             const role = user.role || data.role;
 
+            console.log('✅ Connexion réussie:', { username: usernameToStore, role });
+
             localStorage.setItem("token", token);
-            localStorage.setItem("username", username);
+            localStorage.setItem("username", usernameToStore);
             localStorage.setItem("role", role);
 
+            message.textContent = "✓ Connexion réussie ! Redirection...";
+            message.style.color = "green";
+
             // Redirection selon le rôle
-            if (role === "admin") {
-                window.location.href = "dashboard.html";
-            } else {
-                window.location.href = "index.html";
-            }
+            setTimeout(() => {
+                if (role === "admin") {
+                    window.location.href = "dashboard.html";
+                } else {
+                    window.location.href = "index.html";
+                }
+            }, 500);
 
         } catch (err) {
-            message.textContent = "Erreur serveur";
+            console.error('❌ Erreur:', err);
+            message.textContent = "Erreur: " + err.message;
+            message.style.color = "red";
         }
     });
 }
