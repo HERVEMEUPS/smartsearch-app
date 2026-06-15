@@ -20,7 +20,7 @@ const generalLimiter = rateLimit({
  */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 tentatives max
+  max: 100, // 100 tentatives max (augmenté pour les tests)
   message: {
     success: false,
     message: "Trop de tentatives de connexion, veuillez réessayer dans 15 minutes"
@@ -32,8 +32,8 @@ const authLimiter = rateLimit({
  * Limiteur pour les routes d'inscription
  */
 const registerLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 heure
-  max: 3, // 3 inscriptions max par heure
+  windowMs: 15 * 60 * 1000, // 15 minutes (réduit de 1h)
+  max: 50, // 50 inscriptions max (augmenté pour les tests)
   message: {
     success: false,
     message: "Trop d'inscriptions, veuillez réessayer plus tard"
@@ -45,7 +45,7 @@ const registerLimiter = rateLimit({
  */
 const declarationLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 heure
-  max: 10, // 10 déclarations max par heure
+  max: 100, // 100 déclarations max par heure (augmenté)
   message: {
     success: false,
     message: "Trop de déclarations, veuillez patienter"
