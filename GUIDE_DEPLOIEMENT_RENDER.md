@@ -214,11 +214,74 @@ Créez votre premier compte admin :
 
 ### 🔄 Pour Éviter la Perte de Données :
 
-**Option A - Ajouter MongoDB (Recommandé)** :
-1. Créez un compte gratuit sur [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-2. Créez un cluster gratuit (512 MB)
-3. Ajoutez l'URL de connexion dans les variables d'environnement Render
-4. Modifiez le backend pour utiliser MongoDB au lieu de JSON
+**Option A - Ajouter MongoDB Atlas (Recommandé)** :
+
+### Configuration MongoDB Atlas - Étapes Détaillées
+
+#### 1. Créer un Compte MongoDB Atlas
+
+1. Allez sur https://www.mongodb.com/cloud/atlas/register
+2. Créez un compte gratuit (ou connectez-vous si vous en avez déjà un)
+3. Choisissez le plan **M0 (FREE)** - 512 MB gratuit à vie
+
+#### 2. Créer un Cluster
+
+1. Une fois connecté, cliquez sur **"Create"** pour créer un nouveau cluster
+2. Sélectionnez **M0 (Free Forever)**
+3. Choisissez une région proche (ex: Frankfurt, Paris, ou Londres pour l'Europe)
+4. Nommez votre cluster : `smartsearch-cluster`
+5. Cliquez sur **"Create Deployment"**
+
+#### 3. Configurer l'Accès Réseau
+
+1. Allez dans **"Network Access"** (menu de gauche)
+2. Cliquez sur **"Add IP Address"**
+3. Sélectionnez **"ALLOW ACCESS FROM ANYWHERE"** (0.0.0.0/0)
+   - **Important**: C'est nécessaire pour que Render puisse accéder à votre base
+4. Cliquez sur **"Confirm"**
+
+#### 4. Créer un Utilisateur Database
+
+1. Allez dans **"Database Access"** (menu de gauche)
+2. Cliquez sur **"Add New Database User"**
+3. Choisissez **"Password"** comme méthode d'authentification
+4. Créez un utilisateur:
+   - **Username**: `smartsearch_admin`
+   - **Password**: Cliquez sur "Autogenerate Secure Password" et **COPIEZ LE MOT DE PASSE**
+   - Ou créez votre propre mot de passe fort (sans caractères spéciaux)
+5. Sélectionnez **"Built-in Role"** → **"Read and write to any database"**
+6. Cliquez sur **"Add User"**
+
+⚠️ **IMPORTANT**: Notez bien le nom d'utilisateur et le mot de passe !
+
+#### 5. Obtenir l'URI de Connexion
+
+1. Retournez sur **"Database"** (menu de gauche)
+2. Cliquez sur **"Connect"** sur votre cluster
+3. Sélectionnez **"Drivers"**
+4. Copiez l'URI de connexion (ressemble à):
+   ```
+   mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/?retryWrites=true&w=majority
+   ```
+5. Remplacez `<username>` et `<password>` par vos identifiants:
+   ```
+   mongodb+srv://smartsearch_admin:VOTRE_MOT_DE_PASSE@cluster0.xxxxx.mongodb.net/documents_perdus?retryWrites=true&w=majority
+   ```
+   
+   **Note**: Ajoutez `/documents_perdus` après `.net` pour spécifier le nom de la base
+
+#### 6. Ajouter l'URI dans Render
+
+1. Allez sur Render Dashboard → smartsearch-backend
+2. Cliquez sur **"Environment"** (menu de gauche)
+3. Cliquez sur **"Add Environment Variable"**
+4. Ajoutez:
+   - **Key**: `MONGODB_URI`
+   - **Value**: L'URI complète copiée ci-dessus
+5. Cliquez sur **"Save Changes"**
+6. Le service va automatiquement redémarrer avec MongoDB !
+
+✅ **Votre base de données MongoDB Atlas est maintenant connectée !**
 
 **Option B - Utiliser Render Disks** (Payant) :
 - 1 GB = $0.25/mois
