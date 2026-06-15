@@ -64,14 +64,15 @@ const DeclarationSchema = new Schema({
     geo: {
       type: {
         type: String,
-        enum: ['Point'],
-        default: 'Point'
+        enum: ['Point']
       },
       coordinates: {
         type: [Number], // [longitude, latitude]
         validate: {
           validator: function(coords) {
-            return coords && coords.length === 2;
+            // Valider seulement si des coordonnées sont fournies
+            if (!coords || coords.length === 0) return true;
+            return coords.length === 2;
           },
           message: 'Les coordonnées doivent contenir longitude et latitude'
         }
