@@ -4,13 +4,35 @@
 
 Votre problème : **Impossible de réinitialiser le mot de passe des utilisateurs** depuis l'interface admin.
 
-**Cause identifiée** : Le backend déployé sur Render ne fonctionne pas correctement. Il retourne des erreurs "Not Found" au lieu de répondre aux requêtes.
+**Cause identifiée** : ✅ **ERREUR CORS** - Le backend bloque les requêtes PATCH depuis le frontend.
+
+```
+Access to fetch blocked by CORS policy: 
+Method PATCH is not allowed by Access-Control-Allow-Methods
+```
 
 ---
 
-## ✅ Solution en 3 Étapes (15 minutes)
+## ⚡ Solution RAPIDE (5 minutes) - À FAIRE EN PRIORITÉ
 
-### 📖 Étape 1: Lisez le Guide Rapide
+### 🔧 Fix CORS sur Render
+
+**Suivez ce guide** : **[FIX_CORS_RENDER.md](FIX_CORS_RENDER.md)**
+
+**Actions** :
+1. ✅ Ajouter `CORS_ORIGIN` dans Render avec le frontend autorisé
+2. ✅ Redéployer le service (code déjà corrigé sur GitHub)
+3. ✅ Tester la réinitialisation
+
+**Temps estimé** : 5 minutes ⚡
+
+---
+
+## 📋 Solution COMPLÈTE (15 minutes) - Si Render Backend Ne Fonctionne Pas du Tout
+
+Si après le fix CORS ci-dessus, le backend ne répond toujours pas (erreurs "Not Found"), alors configurez MongoDB :
+
+### 📖 Configurez MongoDB Atlas
 
 Ouvrez et suivez : **[GUIDE_RAPIDE_MONGODB_RENDER.md](GUIDE_RAPIDE_MONGODB_RENDER.md)**
 
