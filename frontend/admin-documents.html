@@ -754,8 +754,8 @@
                     <div class="form-group">
                         <label>Type de déclaration *</label>
                         <select id="edit-typeDeclaration" required>
-                            <option value="perdu">Perdu</option>
-                            <option value="trouve">Trouvé</option>
+                            <option value="PERTE">Perdu</option>
+                            <option value="DECOUVERTE">Trouvé</option>
                         </select>
                     </div>
 
@@ -880,8 +880,8 @@
 
         function updateStats(matchCount) {
             const total = allDocuments.length;
-            const perdus = allDocuments.filter(d => d.typeDeclaration === 'perdu').length;
-            const trouves = total - perdus;
+            const perdus = allDocuments.filter(d => d.type === 'PERTE').length;
+            const trouves = allDocuments.filter(d => d.type === 'DECOUVERTE').length;
 
             document.getElementById("stat-total").textContent = total;
             document.getElementById("stat-perdus").textContent = perdus;
@@ -891,8 +891,8 @@
 
         function displayDocuments() {
             const tous = filteredDocuments;
-            const perdus = filteredDocuments.filter(d => d.typeDeclaration === 'perdu');
-            const trouves = filteredDocuments.filter(d => d.typeDeclaration === 'trouve' || d.typeDeclaration === 'trouvé');
+            const perdus = filteredDocuments.filter(d => d.type === 'PERTE');
+            const trouves = filteredDocuments.filter(d => d.type === 'DECOUVERTE');
 
             renderTable('tous', tous);
             renderTable('perdus', perdus);
@@ -935,8 +935,8 @@
                         ${documents.map(doc => `
                             <tr>
                                 <td>
-                                    <span class="status-badge ${doc.typeDeclaration}">
-                                        ${doc.typeDeclaration === 'perdu' ? 'Perdu' : 'Trouvé'}
+                                    <span class="status-badge ${doc.type === 'PERTE' ? 'perdu' : 'trouve'}">
+                                        ${doc.type === 'PERTE' ? 'Perdu' : 'Trouvé'}
                                     </span>
                                 </td>
                                 <td>${doc.typeDocument || '-'}</td>
@@ -1020,8 +1020,8 @@
                 <div class="detail-row">
                     <div class="detail-label">Type de déclaration</div>
                     <div class="detail-value">
-                        <span class="status-badge ${doc.typeDeclaration}">
-                            ${doc.typeDeclaration === 'perdu' ? 'Perdu' : 'Trouvé'}
+                        <span class="status-badge ${doc.type === 'PERTE' ? 'perdu' : 'trouve'}">
+                            ${doc.type === 'PERTE' ? 'Perdu' : 'Trouvé'}
                         </span>
                     </div>
                 </div>
@@ -1079,7 +1079,7 @@
         function editDocument(doc) {
             // Remplir le formulaire avec les données du document
             document.getElementById('edit-id').value = doc.id;
-            document.getElementById('edit-typeDeclaration').value = doc.typeDeclaration;
+            document.getElementById('edit-typeDeclaration').value = doc.type || 'PERTE';
             document.getElementById('edit-typeDocument').value = doc.typeDocument || '';
             document.getElementById('edit-nom').value = doc.nom || '';
             document.getElementById('edit-numero').value = doc.numero || '';
@@ -1096,14 +1096,14 @@
             const id = document.getElementById('edit-id').value;
 
             const updatedDoc = {
-                id: parseInt(id),
-                typeDeclaration: document.getElementById('edit-typeDeclaration').value,
-                typeDocument: document.getElementById('edit-typeDocument').value,
-                nom: document.getElementById('edit-nom').value,
-                numero: document.getElementById('edit-numero').value,
-                lieu: document.getElementById('edit-lieu').value,
-                date: document.getElementById('edit-date').value,
-                description: document.getElementById('edit-description').value
+                description: document.getElementById('edit-description').value,
+                nomPartiel: document.getElementById('edit-nom').value,
+                numeroPartiel: document.getElementById('edit-numero').value,
+                localisation: {
+                    ville: document.getElementById('edit-lieu').value
+                },
+                photoUrl: '',
+                contactMasque: true
             };
 
             try {
@@ -1192,7 +1192,7 @@
             const csvData = [
                 ['Type', 'Type Document', 'Nom', 'Numéro', 'Lieu', 'Date', 'Description', 'Déclarant', 'Date Déclaration'],
                 ...filteredDocuments.map(doc => [
-                    doc.typeDeclaration,
+                    doc.type === 'PERTE' ? 'Perdu' : 'Trouvé',
                     doc.typeDocument || '',
                     doc.nom || '',
                     doc.numero || '',
