@@ -600,7 +600,8 @@
                     throw new Error("Erreur chargement utilisateurs");
                 }
 
-                allUsers = await usersResponse.json();
+                const usersResult = await usersResponse.json();
+                allUsers = usersResult.success ? usersResult.data : usersResult;
 
                 // Charger documents pour compter les déclarations
                 const docsResponse = await fetch(`${API_URL}/api/declarations`, {
@@ -608,16 +609,18 @@
                 });
 
                 if (docsResponse.ok) {
-                    allDocuments = await docsResponse.json();
+                    const docsResult = await docsResponse.json();
+                    allDocuments = docsResult.success ? docsResult.data : (Array.isArray(docsResult) ? docsResult : []);
                 }
 
                 // Charger statistiques
-                const statsResponse = await fetch(`${API_URL}/api/admin/users/statistics`, {
+                const statsResponse = await fetch(`${API_URL}/api/admin/statistics/users`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
                 if (statsResponse.ok) {
-                    const stats = await statsResponse.json();
+                    const result = await statsResponse.json();
+                    const stats = result.success ? result.data : result;
                     updateStats(stats);
                 }
 
@@ -651,24 +654,25 @@
             }
 
             tbody.innerHTML = users.map(user => {
-                const declarations = allDocuments.filter(d => d.declarantId === user.id).length;
+                const userId = user._id || user.id;
+                const declarations = allDocuments.filter(d => (d.declarantId === userId || d.declarantId === user._id || d.declarantId === user.id)).length;
                 const isCurrentUser = user.username === currentUser;
 
                 return `
                     <tr>
-                        <td>${user.id}</td>
+                        <td>${userId}</td>
                         <td><strong>${user.username}</strong> ${isCurrentUser ? '<span style="color: var(--success-color);">(vous)</span>' : ''}</td>
                         <td><span class="role-badge ${user.role}">${user.role === 'admin' ? 'Administrateur' : 'Déclarant'}</span></td>
                         <td>${declarations} ${declarations > 1 ? 'déclarations' : 'déclaration'}</td>
                         <td>
                             <div class="action-buttons">
-                                <button class="btn-icon btn-edit" onclick="openChangeRoleModal(${user.id}, '${user.username}', '${user.role}')" title="Modifier le rôle" ${isCurrentUser ? 'disabled' : ''}>
+                                <button class="btn-icon btn-edit" onclick="openChangeRoleModal('${userId}', '${user.username}', '${user.role}')" title="Modifier le rôle" ${isCurrentUser ? 'disabled' : ''}>
                                     <i class="fas fa-user-edit"></i>
                                 </button>
-                                <button class="btn-icon btn-reset" onclick="openResetPasswordModal(${user.id}, '${user.username}')" title="Réinitialiser le mot de passe">
+                                <button class="btn-icon btn-reset" onclick="openResetPasswordModal('${userId}', '${user.username}')" title="Réinitialiser le mot de passe">
                                     <i class="fas fa-key"></i>
                                 </button>
-                                <button class="btn-icon btn-delete" onclick="deleteUser(${user.id}, '${user.username}')" title="Supprimer" ${isCurrentUser ? 'disabled' : ''}>
+                                <button class="btn-icon btn-delete" onclick="deleteUser('${userId}', '${user.username}')" title="Supprimer" ${isCurrentUser ? 'disabled' : ''}>
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>

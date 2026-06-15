@@ -29,6 +29,27 @@ router.get('/users', adminController.getAllUsers);
 router.put('/users/:userId/deactivate', adminController.deactivateUser);
 
 /**
+ * @route   PATCH /api/admin/users/:userId/role
+ * @desc    Modifier le rôle d'un utilisateur
+ * @access  Private (Admin only)
+ */
+router.patch('/users/:userId/role', adminController.changeUserRole);
+
+/**
+ * @route   PATCH /api/admin/users/:userId/reset-password
+ * @desc    Réinitialiser le mot de passe d'un utilisateur
+ * @access  Private (Admin only)
+ */
+router.patch('/users/:userId/reset-password', adminController.resetUserPassword);
+
+/**
+ * @route   DELETE /api/admin/users/:userId
+ * @desc    Supprimer un utilisateur
+ * @access  Private (Admin only)
+ */
+router.delete('/users/:userId', adminController.deleteUser);
+
+/**
  * @route   GET /api/admin/statistics/users
  * @desc    Obtenir les statistiques des utilisateurs
  * @access  Private (Admin only)

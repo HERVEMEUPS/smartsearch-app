@@ -850,7 +850,8 @@
                     throw new Error("Erreur de chargement");
                 }
 
-                allDocuments = await response.json();
+                const result = await response.json();
+                allDocuments = result.success ? result.data : (Array.isArray(result) ? result : []);
                 filteredDocuments = [...allDocuments];
 
                 // Charger les correspondances
@@ -861,7 +862,8 @@
                 let matchCount = 0;
                 if (matchResponse.ok) {
                     const matchData = await matchResponse.json();
-                    matchCount = matchData.total || 0;
+                    const matchResult = matchData.success ? matchData.data : matchData;
+                    matchCount = matchResult.total || (matchResult.correspondances ? matchResult.correspondances.length : 0);
                 }
 
                 // Mettre à jour les stats

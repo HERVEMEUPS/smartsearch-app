@@ -306,25 +306,150 @@ class UserService {
   }
 
   /**
+   * Changer le rôle d'un utilisateur (admin)
+   */
+  async changeUserRole(userId, newRole) {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new Error('Utilisateur non trouvé');
+    }
+
+    if (!['admin', 'declarant'].includes(newRole)) {
+      throw new Error('Rôle invalide');
+    }
+
+    const oldRole = user.role;
+    user.role = newRole;
+    await user.save();
+
+    await AuditLog.log({
+      action: 'CHANGE_USER_ROLE',
+      entite: 'USER',
+      entiteId: userId,
+      details: { oldRole, newRole }
+    });
+
+    return { message: `Rôle modifié de ${oldRole} à ${newRole}` };
+  }
+
+  /**
+   * Réinitialiser le mot de passe d'un utilisateur (admin)
+   */
+  async resetUserPassword(userId, newPassword) {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new Error('Utilisateur non trouvé');
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error('Le mot de passe doit faire au moins 6 caractères');
+    }
+
+    // Hasher et enregistrer le nouveau mot de passe
+    user.password = await bcrypt.hash(newPassword, config.bcrypt.saltRounds);
+    await user.save();
+
+    await AuditLog.log({
+      action: 'RESET_USER_PASSWORD',
+      entite: 'USER',
+      entiteId: userId
+    });
+
+    return { message: 'Mot de passe réinitialisé avec succès' };
+  }
+
+  /**
+   * Supprimer un utilisateur (admin)
+   */
+  async deleteUser(adminId, userId) {
+    // Empêcher l'admin de se supprimer lui-même
+    if (adminId.toString() === userId.toString()) {
+      throw new Error('Vous ne pouvez pas supprimer votre propre compte');
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new Error('Utilisateur non trouvé');
+    }
+
+    await AuditLog.log({
+      acteurId: adminId,
+      action: 'DELETE_USER',
+      entite: 'USER',
+      entiteId: userId,
+      details: { username: user.username, email: user.email }
+    });
+
+    await User.findByIdAndDelete(userId);
+
+    return { message: `Utilisateur ${user.username} supprimé avec succès` };
+  }
+
+  /**
    * Obtenir les statistiques utilisateurs
    */
   async getStatistics() {
-    const [totalUsers, activeUsers, roleStats] = await Promise.all([
+    const Declaration = require('./declarationService');
+
+    const [totalUsers, activeUsers, roleStats, topDeclarants] = await Promise.all([
       User.countDocuments(),
       User.countDocuments({ isActive: true }),
       User.aggregate([
         { $group: { _id: '$role', count: { $sum: 1 } } }
+      ]),
+      // Top déclarants avec nombre de déclarations
+      User.aggregate([
+        {
+          $lookup: {
+            from: 'declarations',
+            localField: '_id',
+            foreignField: 'declarantId',
+            as: 'declarations'
+          }
+        },
+        {
+          $addFields: {
+            declarationsCount: { $size: '$declarations' }
+          }
+        },
+        {
+          $match: {
+            declarationsCount: { $gt: 0 }
+          }
+        },
+        {
+          $sort: { declarationsCount: -1 }
+        },
+        {
+          $limit: 10
+        },
+        {
+          $project: {
+            username: 1,
+            role: 1,
+            declarations: '$declarationsCount'
+          }
+        }
       ])
     ]);
+
+    const roleStatsObj = roleStats.reduce((acc, { _id, count }) => {
+      acc[_id] = count;
+      return acc;
+    }, {});
 
     return {
       total: totalUsers,
       active: activeUsers,
       inactive: totalUsers - activeUsers,
-      byRole: roleStats.reduce((acc, { _id, count }) => {
-        acc[_id] = count;
-        return acc;
-      }, {})
+      admins: roleStatsObj.admin || 0,
+      declarants: roleStatsObj.declarant || 0,
+      usersWithDeclarations: topDeclarants.length,
+      byRole: roleStatsObj,
+      topDeclarants: topDeclarants
     };
   }
 }

@@ -380,9 +380,9 @@
             document.getElementById("dashboard").style.display = "none";
 
             try {
-                // Récupérer les statistiques
+                // Récupérer les statistiques depuis le dashboard consolidé
                 console.log('📊 Chargement des statistiques...');
-                const response = await fetch(`${API_URL}/api/admin/statistics`, {
+                const response = await fetch(`${API_URL}/api/admin/statistics/declarations`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
@@ -400,7 +400,8 @@
                     throw new Error("Erreur de chargement: " + response.status);
                 }
 
-                const stats = await response.json();
+                const result = await response.json();
+                const stats = result.success ? result.data : result;
                 console.log('✅ Statistiques reçues:', stats);
 
                 // Afficher les stats
@@ -513,7 +514,7 @@
 
         async function loadUsersStats(token) {
             try {
-                const response = await fetch(`${API_URL}/api/admin/users/statistics`, {
+                const response = await fetch(`${API_URL}/api/admin/statistics/users`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
@@ -523,7 +524,8 @@
                     return;
                 }
 
-                const stats = await response.json();
+                const result = await response.json();
+                const stats = result.success ? result.data : result;
 
                 // Afficher les stats utilisateurs
                 document.getElementById("stat-users-total").textContent = stats.total || 0;

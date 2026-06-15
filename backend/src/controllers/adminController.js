@@ -22,6 +22,35 @@ exports.deactivateUser = asyncHandler(async (req, res) => {
   });
 });
 
+exports.changeUserRole = asyncHandler(async (req, res) => {
+  const { role } = req.body;
+  const result = await userService.changeUserRole(req.params.userId, role);
+
+  res.json({
+    success: true,
+    message: result.message || 'Rôle modifié avec succès'
+  });
+});
+
+exports.resetUserPassword = asyncHandler(async (req, res) => {
+  const { newPassword } = req.body;
+  const result = await userService.resetUserPassword(req.params.userId, newPassword);
+
+  res.json({
+    success: true,
+    message: result.message || 'Mot de passe réinitialisé avec succès'
+  });
+});
+
+exports.deleteUser = asyncHandler(async (req, res) => {
+  const result = await userService.deleteUser(req.user.id, req.params.userId);
+
+  res.json({
+    success: true,
+    message: result.message || 'Utilisateur supprimé avec succès'
+  });
+});
+
 exports.getUserStatistics = asyncHandler(async (req, res) => {
   const stats = await userService.getStatistics();
 

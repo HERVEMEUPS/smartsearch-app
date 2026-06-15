@@ -332,18 +332,41 @@ if (declarationForm) {
         }
 
         // Récupération des valeurs du formulaire
+        const typeDeclarationValue = document.getElementById("typeDeclaration").value;
+        const typeDocumentValue = document.getElementById("typeDocument").value;
+
+        // Mapper les valeurs du frontend vers le format attendu par le backend
+        const typeMapping = {
+            'perdu': 'PERTE',
+            'trouve': 'DECOUVERTE',
+            'trouvé': 'DECOUVERTE'
+        };
+
+        const typeDocMapping = {
+            'CNI': 'CNI',
+            'Passeport': 'PASSEPORT',
+            'Permis de Conduire': 'PERMIS',
+            'Carte Scolaire': 'CARTE_SCOLAIRE',
+            'Diplôme': 'DIPLOME',
+            'Acte de Naissance': 'ACTE_NAISSANCE'
+        };
+
         const documentData = {
-            typeDeclaration: document.getElementById("typeDeclaration").value,
-            typeDocument: document.getElementById("typeDocument").value,
-            nom: document.getElementById("nom").value,
-            numero: document.getElementById("numero").value,
-            lieu: document.getElementById("lieu").value,
-            date: document.getElementById("date").value,
+            type: typeMapping[typeDeclarationValue] || 'PERTE',
+            typeDocument: typeDocMapping[typeDocumentValue] || typeDocumentValue.toUpperCase().replace(/ /g, '_'),
+            nomPartiel: document.getElementById("nom").value,
+            numeroPartiel: document.getElementById("numero").value,
+            localisation: {
+                ville: document.getElementById("lieu").value,
+                quartier: '',
+                pointRepere: ''
+            },
+            dateEvenement: document.getElementById("date").value,
             description: document.getElementById("description").value
         };
 
         try {
-            const response = await fetch(`${API_URL}/declaration`, {
+            const response = await fetch(`${API_URL}/api/declarations`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -365,7 +388,7 @@ if (declarationForm) {
                 return;
             }
 
-            alert(result.message);
+            alert(result.message || "Déclaration enregistrée avec succès !");
             declarationForm.reset();
         } catch (error) {
             alert("Erreur lors de l’enregistrement");

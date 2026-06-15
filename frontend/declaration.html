@@ -63,7 +63,16 @@
         </select>
 
         <label>Type de document</label>
-        <input type="text" id="typeDocument" required>
+        <select id="typeDocument" required>
+            <option value="">--Choisir--</option>
+            <option value="CNI">CNI (Carte Nationale d'Identité)</option>
+            <option value="Passeport">Passeport</option>
+            <option value="Permis de Conduire">Permis de Conduire</option>
+            <option value="Carte Scolaire">Carte Scolaire</option>
+            <option value="Diplôme">Diplôme</option>
+            <option value="Acte de Naissance">Acte de Naissance</option>
+            <option value="AUTRE">Autre</option>
+        </select>
 
         <label>Nom du propriétaire</label>
         <input type="text" id="nom" required>
