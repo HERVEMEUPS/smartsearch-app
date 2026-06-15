@@ -96,7 +96,7 @@ class DeclarationService {
 
     const skip = (page - 1) * limit;
 
-    const [declarations, total] = await Promise.all([
+    const [rawDeclarations, total] = await Promise.all([
       Declaration.find(query)
         .populate('utilisateur', 'username email')
         .sort({ createdAt: -1 })
@@ -105,6 +105,20 @@ class DeclarationService {
         .lean(),
       Declaration.countDocuments(query)
     ]);
+
+    // Mapper les champs MongoDB vers le format frontend
+    const declarations = rawDeclarations.map(decl => ({
+      ...decl,
+      id: decl._id,
+      typeDeclaration: decl.type === 'PERTE' ? 'perdu' : 'trouve',
+      nom: decl.nomPartiel,
+      numero: decl.numeroPartiel,
+      lieu: decl.localisation?.ville,
+      date: decl.dateEvenement,
+      declarantUsername: decl.utilisateur?.username,
+      declarantId: decl.utilisateur?._id,
+      dateDeclaration: decl.createdAt
+    }));
 
     return {
       declarations,
