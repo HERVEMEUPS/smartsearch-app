@@ -735,12 +735,12 @@
 
                 const data = await response.json();
 
-                if (response.ok) {
-                    alert(data.message);
+                if (response.ok && data.success) {
+                    alert(data.message || "Rôle modifié avec succès");
                     closeModal("modalChangeRole");
                     loadData();
                 } else {
-                    alert(data.message);
+                    alert(data.message || "Erreur lors de la modification du rôle");
                 }
             } catch (error) {
                 console.error("Erreur:", error);
@@ -769,11 +769,11 @@
 
                 const data = await response.json();
 
-                if (response.ok) {
-                    alert(data.message);
+                if (response.ok && data.success) {
+                    alert(data.message || "Mot de passe réinitialisé avec succès");
                     closeModal("modalResetPassword");
                 } else {
-                    alert(data.message);
+                    alert(data.message || "Erreur lors de la réinitialisation");
                 }
             } catch (error) {
                 console.error("Erreur:", error);
@@ -798,11 +798,11 @@
 
                 const data = await response.json();
 
-                if (response.ok) {
-                    alert(data.message);
+                if (response.ok && data.success) {
+                    alert(data.message || "Utilisateur supprimé avec succès");
                     loadData();
                 } else {
-                    alert(data.message);
+                    alert(data.message || "Erreur lors de la suppression");
                 }
             } catch (error) {
                 console.error("Erreur:", error);
