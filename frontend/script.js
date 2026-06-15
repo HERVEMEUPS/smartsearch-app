@@ -235,6 +235,7 @@ if (registerForm) {
         e.preventDefault();
 
         const username = document.getElementById("reg_username").value;
+        const email = document.getElementById("reg_email").value;
         const password = document.getElementById("reg_password").value;
         const role = document.getElementById("reg_role").value;
         const adminCode = document.getElementById("admin_code").value;
@@ -259,6 +260,7 @@ if (registerForm) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     username,
+                    email,
                     password,
                     role,
                     adminCode
