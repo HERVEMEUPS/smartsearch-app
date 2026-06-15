@@ -416,13 +416,22 @@ if (rechercheForm) {
         // Construction des paramètres de recherche
         const params = new URLSearchParams();
 
-        const typeDeclaration = document.getElementById("r_typeDeclaration").value;
-        const typeDocument = document.getElementById("r_typeDocument").value;
-        const nom = document.getElementById("r_nom").value;
-        const numero = document.getElementById("r_numero").value;
-        const lieu = document.getElementById("r_lieu").value;
-        const dateDebut = document.getElementById("r_dateDebut").value;
-        const dateFin = document.getElementById("r_dateFin").value;
+        const typeDeclaration = document.getElementById("r_typeDeclaration")?.value || "";
+        const typeDocument = document.getElementById("r_typeDocument")?.value || "";
+        const nom = document.getElementById("r_nom")?.value?.trim() || "";
+        const numero = document.getElementById("r_numero")?.value?.trim() || "";
+        const lieu = document.getElementById("r_lieu")?.value?.trim() || "";
+        const dateDebut = document.getElementById("r_dateDebut")?.value || "";
+        const dateFin = document.getElementById("r_dateFin")?.value || "";
+
+        console.log("📋 Valeurs des champs:");
+        console.log("   Type déclaration:", typeDeclaration || "(vide)");
+        console.log("   Type document:", typeDocument || "(vide)");
+        console.log("   Nom:", nom || "(vide)");
+        console.log("   Numéro:", numero || "(vide)");
+        console.log("   Lieu:", lieu || "(vide)");
+        console.log("   Date début:", dateDebut || "(vide)");
+        console.log("   Date fin:", dateFin || "(vide)");
 
         // Ajouter seulement les paramètres non vides
         if (typeDeclaration) params.append("type", typeDeclaration);
@@ -440,7 +449,8 @@ if (rechercheForm) {
         if (dateDebut) params.append("dateDebut", dateDebut);
         if (dateFin) params.append("dateFin", dateFin);
 
-        console.log("🔍 Recherche avec paramètres:", Object.fromEntries(params));
+        console.log("\n🔍 Recherche avec paramètres:", Object.fromEntries(params));
+        console.log("📡 URL complète:", `${API_URL}/api/declarations?${params.toString()}`);
 
         try {
             const response = await fetch(`${API_URL}/api/declarations?${params.toString()}`, {
@@ -463,9 +473,16 @@ if (rechercheForm) {
 
             const result = await response.json();
             console.log("📦 Données reçues:", result);
+            console.log("   Type:", typeof result);
+            console.log("   Success:", result.success);
+            console.log("   Data:", result.data);
+            console.log("   Nombre de résultats:", result.data?.length || 0);
 
             // Extraire les déclarations du format {success: true, data: [...]}
-            const documents = result.success ? result.data : result;
+            const documents = result.success ? result.data : (Array.isArray(result) ? result : []);
+
+            console.log(`\n✅ ${documents.length} document(s) trouvé(s)\n`);
+
             afficherResultats(documents);
         } catch (error) {
             resultatsDiv.innerHTML = "<p>Erreur lors de la recherche</p>";
@@ -481,7 +498,19 @@ function afficherResultats(documents) {
     resultatsDiv.innerHTML = "";
 
     if (!documents || documents.length === 0) {
-        resultatsDiv.innerHTML = "<p>Aucun document trouvé. Essayez avec d'autres critères de recherche.</p>";
+        resultatsDiv.innerHTML = `
+            <div style="text-align: center; padding: 40px; background: #fff3cd; border-radius: 10px; margin: 20px 0;">
+                <h3 style="color: #856404; margin-bottom: 15px;">🔍 Aucun document trouvé</h3>
+                <p style="color: #856404; margin-bottom: 10px;">Aucune déclaration ne correspond à vos critères.</p>
+                <p style="color: #856404; font-size: 14px;">💡 Suggestions :</p>
+                <ul style="text-align: left; display: inline-block; color: #856404; font-size: 14px;">
+                    <li>Essayez de laisser certains champs vides</li>
+                    <li>Vérifiez l'orthographe du nom ou du lieu</li>
+                    <li>Élargissez la plage de dates</li>
+                    <li>Essayez de rechercher sans aucun critère pour voir tous les documents</li>
+                </ul>
+            </div>
+        `;
         return;
     }
 
