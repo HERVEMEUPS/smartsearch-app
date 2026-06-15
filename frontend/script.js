@@ -427,8 +427,15 @@ if (rechercheForm) {
         // Ajouter seulement les paramètres non vides
         if (typeDeclaration) params.append("type", typeDeclaration);
         if (typeDocument) params.append("typeDocument", typeDocument);
-        if (nom) params.append("search", nom);
-        if (numero) params.append("search", numero);
+
+        // Combiner nom et numéro dans un seul paramètre search
+        const searchTerms = [];
+        if (nom) searchTerms.push(nom);
+        if (numero) searchTerms.push(numero);
+        if (searchTerms.length > 0) {
+            params.append("search", searchTerms.join(" "));
+        }
+
         if (lieu) params.append("ville", lieu);
         if (dateDebut) params.append("dateDebut", dateDebut);
         if (dateFin) params.append("dateFin", dateFin);
