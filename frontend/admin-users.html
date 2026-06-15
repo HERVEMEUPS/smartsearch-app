@@ -708,6 +708,9 @@
         }
 
         function openResetPasswordModal(userId, username) {
+            console.log("📝 Ouverture modal reset password");
+            console.log("   User ID:", userId);
+            console.log("   Username:", username);
             currentUserId = userId;
             document.getElementById("modalResetUsername").value = username;
             document.getElementById("modalNewPassword").value = "";
@@ -757,8 +760,15 @@
                 return;
             }
 
+            console.log("🔧 Tentative de réinitialisation...");
+            console.log("   User ID:", currentUserId);
+            console.log("   Password length:", newPassword.length);
+
             try {
-                const response = await fetch(`${API_URL}/api/admin/users/${currentUserId}/reset-password`, {
+                const url = `${API_URL}/api/admin/users/${currentUserId}/reset-password`;
+                console.log("   URL:", url);
+
+                const response = await fetch(url, {
                     method: "PATCH",
                     headers: {
                         "Content-Type": "application/json",
@@ -767,17 +777,22 @@
                     body: JSON.stringify({ newPassword })
                 });
 
+                console.log("   Response status:", response.status, response.statusText);
+                console.log("   Response headers:", Object.fromEntries(response.headers.entries()));
+
                 const data = await response.json();
+                console.log("   Response data:", data);
 
                 if (response.ok && data.success) {
                     alert(data.message || "Mot de passe réinitialisé avec succès");
                     closeModal("modalResetPassword");
                 } else {
+                    console.error("❌ Échec:", data);
                     alert(data.message || "Erreur lors de la réinitialisation");
                 }
             } catch (error) {
-                console.error("Erreur:", error);
-                alert("Erreur lors de la réinitialisation du mot de passe");
+                console.error("❌ Exception:", error);
+                alert("Erreur lors de la réinitialisation du mot de passe: " + error.message);
             }
         }
 
