@@ -101,6 +101,10 @@
             background: #ffc107;
         }
 
+        .match-score.low {
+            background: #dc3545;
+        }
+
         .match-details {
             font-size: 13px;
             color: #666;
@@ -589,34 +593,50 @@
                     return;
                 }
 
-                const data = await response.json();
+                const result = await response.json();
                 const matchesList = document.getElementById("matches-list");
 
-                if (data.correspondances.length === 0) {
+                // L'API renvoie { success: true, data: [...] }
+                const correspondances = result.success ? result.data : [];
+
+                if (!correspondances || correspondances.length === 0) {
                     matchesList.innerHTML = '<p style="color: #999;">Aucune correspondance détectée pour le moment</p>';
                     return;
                 }
 
-                matchesList.innerHTML = data.correspondances.map(match => `
-                    <div class="match-item">
-                        <strong>📄 ${match.perdu.typeDocument}</strong>
-                        <span class="match-score ${match.matchScore >= 80 ? 'high' : 'medium'}">
-                            ${match.matchScore}% - ${match.confidence}
-                        </span>
-                        <br>
-                        <span style="color: #dc3545;">🔴 Perdu:</span> ${match.perdu.nom}
-                        <small>(déclaré par ${match.perdu.declarantUsername})</small>
-                        <br>
-                        <span style="color: #28a745;">🟢 Trouvé:</span> ${match.trouve.nom}
-                        <small>(déclaré par ${match.trouve.declarantUsername})</small>
-                        <div class="match-details">
-                            💡 ${match.matchDetails.join(', ')}
+                matchesList.innerHTML = correspondances.map(match => {
+                    const declPerte = match.declarationPerteId || {};
+                    const declDecouverte = match.declarationDecouverteId || {};
+                    const scorePercent = Math.round((match.scoreGlobal || 0) * 100);
+
+                    return `
+                        <div class="match-item">
+                            <strong>📄 ${declPerte.typeDocument || 'N/A'}</strong>
+                            <span class="match-score ${scorePercent >= 80 ? 'high' : scorePercent >= 60 ? 'medium' : 'low'}">
+                                ${scorePercent}%
+                            </span>
+                            <span style="padding: 5px 10px; border-radius: 5px; background: ${match.statut === 'CONFIRMEE' ? '#28a745' : match.statut === 'REJETEE' ? '#dc3545' : '#ffc107'}; color: white; font-size: 11px; margin-left: 10px;">
+                                ${match.statut || 'PROPOSEE'}
+                            </span>
+                            <br>
+                            <span style="color: #dc3545;">🔴 Perdu:</span> ${declPerte.nomPartiel || 'N/A'}
+                            <small>(${declPerte.numeroPartiel || 'sans numéro'})</small>
+                            <br>
+                            <span style="color: #28a745;">🟢 Trouvé:</span> ${declDecouverte.nomPartiel || 'N/A'}
+                            <small>(${declDecouverte.numeroPartiel || 'sans numéro'})</small>
+                            ${match.metadataIA?.reasoning ? `
+                            <div class="match-details" style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px; font-size: 13px;">
+                                💡 ${match.metadataIA.reasoning}
+                            </div>
+                            ` : ''}
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
 
             } catch (error) {
                 console.error("Erreur chargement correspondances:", error);
+                const matchesList = document.getElementById("matches-list");
+                matchesList.innerHTML = '<p style="color: #dc3545;">⚠️ Erreur lors du chargement des correspondances</p>';
             }
         }
 
