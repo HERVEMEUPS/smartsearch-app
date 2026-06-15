@@ -27,6 +27,8 @@ exports.register = asyncHandler(async (req, res) => {
  * Connexion d'un utilisateur
  */
 exports.login = asyncHandler(async (req, res) => {
+  console.log('📝 Tentative de connexion:', { username: req.body.username });
+
   const { username, password } = req.body;
 
   const metadata = {
@@ -35,6 +37,8 @@ exports.login = asyncHandler(async (req, res) => {
   };
 
   const result = await userService.login(username, password, metadata);
+
+  console.log('✅ Connexion réussie pour:', username);
 
   res.json({
     success: true,

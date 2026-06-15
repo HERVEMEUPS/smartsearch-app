@@ -57,17 +57,29 @@ class UserService {
    * Connexion d'un utilisateur
    */
   async login(username, password, metadata = {}) {
+    console.log('🔍 Recherche utilisateur:', username);
+
     // Trouver l'utilisateur
     const user = await User.findOne({ username });
 
-    if (!user || !user.isActive) {
+    if (!user) {
+      console.log('❌ Utilisateur non trouvé:', username);
       throw new Error('Identifiants incorrects');
     }
+
+    if (!user.isActive) {
+      console.log('❌ Compte désactivé:', username);
+      throw new Error('Compte désactivé');
+    }
+
+    console.log('🔐 Vérification mot de passe pour:', username);
 
     // Vérifier le mot de passe
     const isValidPassword = await bcrypt.compare(password, user.password);
 
     if (!isValidPassword) {
+      console.log('❌ Mot de passe incorrect pour:', username);
+
       // Log d'échec
       await AuditLog.log({
         acteurId: user._id,

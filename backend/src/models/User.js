@@ -20,6 +20,7 @@ const UserSchema = new Schema({
   telephone: {
     type: String,
     trim: true,
+    required: false,
     match: [/^\+?[0-9]{9,15}$/, 'Numéro de téléphone invalide']
   },
   password: {

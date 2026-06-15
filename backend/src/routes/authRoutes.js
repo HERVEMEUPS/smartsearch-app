@@ -13,7 +13,7 @@ const { validateFields } = require('../middlewares/validator');
 router.post(
   '/register',
   registerLimiter,
-  validateFields(['username', 'email', 'password', 'role']),
+  validateFields(['username', 'email', 'password']),
   authController.register
 );
 

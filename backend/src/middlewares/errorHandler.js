@@ -4,7 +4,9 @@ const config = require('../config');
  * Middleware de gestion centralisée des erreurs
  */
 const errorHandler = (err, req, res, next) => {
-  console.error('❌ Erreur capturée:', err);
+  console.error('❌ Erreur capturée:', err.message);
+  console.error('📍 Route:', req.method, req.originalUrl);
+  console.error(err.stack);
 
   // Erreurs Mongoose
   if (err.name === 'ValidationError') {
