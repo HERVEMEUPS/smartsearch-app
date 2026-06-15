@@ -587,7 +587,7 @@
 
             try {
                 // Charger utilisateurs
-                const usersResponse = await fetch(`${API_URL}/users`, {
+                const usersResponse = await fetch(`${API_URL}/api/admin/users`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
@@ -603,7 +603,7 @@
                 allUsers = await usersResponse.json();
 
                 // Charger documents pour compter les déclarations
-                const docsResponse = await fetch(`${API_URL}/documents`, {
+                const docsResponse = await fetch(`${API_URL}/api/declarations`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
@@ -612,7 +612,7 @@
                 }
 
                 // Charger statistiques
-                const statsResponse = await fetch(`${API_URL}/users-stats`, {
+                const statsResponse = await fetch(`${API_URL}/api/admin/users/statistics`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
@@ -720,7 +720,7 @@
             const token = localStorage.getItem("token");
 
             try {
-                const response = await fetch(`${API_URL}/users/${currentUserId}/role`, {
+                const response = await fetch(`${API_URL}/api/admin/users/${currentUserId}/role`, {
                     method: "PATCH",
                     headers: {
                         "Content-Type": "application/json",
@@ -754,7 +754,7 @@
             }
 
             try {
-                const response = await fetch(`${API_URL}/users/${currentUserId}/reset-password`, {
+                const response = await fetch(`${API_URL}/api/admin/users/${currentUserId}/reset-password`, {
                     method: "PATCH",
                     headers: {
                         "Content-Type": "application/json",
@@ -785,7 +785,7 @@
             const token = localStorage.getItem("token");
 
             try {
-                const response = await fetch(`${API_URL}/users/${userId}`, {
+                const response = await fetch(`${API_URL}/api/admin/users/${userId}`, {
                     method: "DELETE",
                     headers: {
                         "Authorization": `Bearer ${token}`

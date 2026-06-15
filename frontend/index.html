@@ -324,7 +324,7 @@
         async function loadStats() {
             try {
                 // Utiliser la route publique pour les stats de base
-                const response = await fetch(`${API_URL}/stats-public`);
+                const response = await fetch(`${API_URL}/api/statistics/public`);
 
                 if (response.ok) {
                     const stats = await response.json();
