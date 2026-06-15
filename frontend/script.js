@@ -357,9 +357,7 @@ if (declarationForm) {
             nomPartiel: document.getElementById("nom").value,
             numeroPartiel: document.getElementById("numero").value,
             localisation: {
-                ville: document.getElementById("lieu").value,
-                quartier: '',
-                pointRepere: ''
+                ville: document.getElementById("lieu").value
             },
             dateEvenement: document.getElementById("date").value,
             description: document.getElementById("description").value
