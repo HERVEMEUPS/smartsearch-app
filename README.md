@@ -1,256 +1,228 @@
-# 🔍 Système Intelligent de Gestion de Documents Perdus - V3
+# 📁 SmartSearch - Système Intelligent de Gestion de Documents Perdus
 
-![Status](https://img.shields.io/badge/status-intelligent-brightgreen)
-![Security](https://img.shields.io/badge/security-JWT%20%2B%20bcrypt-blue)
-![Node](https://img.shields.io/badge/node-%3E%3D16.0.0-green)
-![Python](https://img.shields.io/badge/python-%3E%3D3.11-blue)
-![MongoDB](https://img.shields.io/badge/mongodb-%3E%3D7.0-green)
-![AI](https://img.shields.io/badge/AI-Claude%20%2F%20GPT-purple)
+> **Projet de Soutenance Master 2 SIGL Professionnel**  
+> **Thème :** ANALYSE, CONCEPTION ET IMPLÉMENTATION D'UN SYSTÈME INTELLIGENT DÉDIÉ À LA DÉCLARATION ET À LA RECHERCHE DE DOCUMENTS PERDUS  
+> **Auteur :** NGOA (HERVEMEUPS) | **Date :** Juin 2026
 
-Plateforme full-stack **intelligente** avec matching sémantique par IA pour la déclaration, la recherche et la récupération automatique de documents perdus ou trouvés au Cameroun.
+## 🎯 Description
+Plateforme web intelligente permettant de **déclarer** et **rechercher** des documents perdus ou trouvés (CNI, passeports, permis, etc.) avec un système de **matching automatique** basé sur des algorithmes de fuzzy matching et scoring avancé.
 
-## ✨ Fonctionnalités Principales
-
-### 🤖 Intelligence Artificielle
-- **Matching sémantique automatique** : Rapprochement intelligent PERTE ↔ DÉCOUVERTE
-- **Score composite** : Combine NLP (40%), LLM (50%) et géolocalisation (10%)
-- **Évaluation contextuelle** : Intégration de Claude (Anthropic) ou GPT (OpenAI)
-- **Précision ≥ 85%** : Détection fiable des correspondances
-
-### 🔐 Sécurité et Authentification
-- **JWT avec refresh tokens** (access 15min, refresh 7 jours)
-- **Bcrypt** pour le hachage des mots de passe (10 rounds)
-- **Rate limiting** intelligent par endpoint
-- **Conformité RGPD** : Anonymisation et droit à l'oubli
-
-### 📝 Gestion des Déclarations
-- **Formulaires structurés** avec validation complète
-- **Types de documents** : CNI, Passeport, Permis, Carte scolaire, Diplôme, etc.
-- **Géolocalisation** : Ville, quartier, coordonnées GPS
-- **Statuts** : EN_ATTENTE, EN_MATCH, CLOTUREE, ARCHIVEE
-
-### 🔔 Notifications Multicanal
-- **Email** (SendGrid)
-- **SMS** (Twilio)
-- **Notifications push** (web)
-- **Notifications in-app**
-
-### 👥 Gestion des Utilisateurs
-- **Rôles** : Admin, Déclarant
-- **Profils** : Préférences de notifications, historique
-- **Audit logs** : Traçabilité complète des actions
-
-### 📊 Tableau de Bord Admin
-- **Statistiques en temps réel**
-- **Gestion des correspondances**
-- **Modération des déclarations**
-- **Indicateurs de performance (KPIs)**
-
-## 🚀 Démarrage Rapide
-
-### Méthode 1 : Docker (Recommandé)
-
-```bash
-# 1. Cloner le projet
-cd "Documents_perdus - V3"
-
-# 2. Configurer les variables d'environnement
-cp .env.example .env
-# Éditer .env : LLM_API_KEY, JWT_SECRET obligatoires
-
-# 3. Démarrer tous les services
-docker-compose up -d
-
-# 4. Migration des données
-docker-compose exec api npm run migrate
-
-# 5. Accéder à la plateforme
-# Frontend: http://localhost:5173
-# API: http://localhost:3000
-# Service IA: http://localhost:8000
-```
-
-### Méthode 2 : Installation manuelle
-
-**Prérequis :**
-- Node.js ≥ 16.0.0
-- Python ≥ 3.11
-- MongoDB ≥ 7.0
-
-```bash
-# 1. Backend API
-cd backend
-npm install
-cp .env.example .env
-# Configurer .env
-npm run dev
-
-# 2. Service IA (nouveau terminal)
-cd apps/ai-service
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python -m spacy download fr_core_news_sm
-uvicorn app.main:app --reload --port 8000
-
-# 3. Frontend (nouveau terminal, si disponible)
-cd apps/web
-npm install
-npm run dev
-```
-
-📚 **Documentation complète** : [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-
-## 📁 Architecture du Projet
+## 📂 Structure du Projet
 
 ```
 Documents_perdus - V3/
-├── apps/
-│   ├── web/                      # Frontend React + Vite + Tailwind CSS
-│   │   ├── src/                  # Code source React
-│   │   └── package.json
-│   │
-│   └── ai-service/               # 🤖 Service IA Python/FastAPI
-│       ├── app/
-│       │   ├── main.py           # Application FastAPI
-│       │   ├── matching.py       # Moteur de matching intelligent
-│       │   ├── llm_client.py     # Client LLM (Claude/GPT)
-│       │   ├── nlp_processor.py  # Traitement NLP (spaCy)
-│       │   └── config.py         # Configuration
-│       ├── requirements.txt      # Dépendances Python
-│       └── Dockerfile
-│
-├── backend/                      # API Node.js + Express
+├── backend/                    # API Node.js + MongoDB
 │   ├── src/
-│   │   ├── models/               # 🗄️ Modèles Mongoose (MongoDB)
-│   │   │   ├── User.js
-│   │   │   ├── Declaration.js
-│   │   │   ├── Correspondance.js
-│   │   │   ├── Notification.js
-│   │   │   └── AuditLog.js
-│   │   ├── services/             # 💼 Logique métier
-│   │   │   ├── userService.js
-│   │   │   ├── declarationService.js
-│   │   │   ├── matchingService.js
-│   │   │   └── notificationService.js
-│   │   ├── routes/               # 🛣️ Routes API REST
-│   │   ├── middlewares/          # 🔒 Auth, validation, erreurs
-│   │   ├── controllers/          # 🎮 Contrôleurs
-│   │   ├── config/               # ⚙️ Configuration
-│   │   └── server.js             # Point d'entrée
-│   ├── package.json
-│   └── Dockerfile
+│   │   ├── models/            # Modèles Mongoose
+│   │   ├── controllers/       # Logique métier
+│   │   ├── middlewares/       # Auth, validation, etc.
+│   │   └── config/            # Configuration
+│   └── intelligent-search.js  # Algorithme de recherche floue
 │
-├── scripts/
-│   └── migrate-json-to-mongo.js  # Migration JSON → MongoDB
+├── frontend/                   # Interface utilisateur
+│   ├── index.html             # Accueil
+│   ├── declaration.html       # Déclarer un document
+│   ├── recherche.html         # Rechercher
+│   ├── dashboard.html         # Admin
+│   ├── script.js              # Logique frontend
+│   └── style.css              # Styles
 │
-├── UML/                          # Diagrammes UML (PlantUML)
-│   ├── use-case.puml
-│   ├── class-diagram.puml
-│   ├── sequence-diagram.puml
-│   └── activity-diagram.puml
+├── UML/                        # Diagrammes
+├── scripts/                    # Scripts utilitaires
 │
-├── docs/
-│   ├── ARCHITECTURE.md           # 🏗️ Architecture détaillée
-│   ├── DEPLOYMENT_GUIDE.md       # 🚀 Guide de déploiement
-│   └── QUICKSTART_IMPLEMENTATION.md
-│
-├── docker-compose.yml            # 🐳 Orchestration Docker
-├── .env.example                  # Template configuration
-└── README.md                     # Ce fichier
+└── Documentation/
+    ├── ARCHITECTURE.md         # Architecture technique
+    ├── DEPLOYMENT_GUIDE.md     # Guide de déploiement
+    ├── STRUCTURE.md            # Structure détaillée
+    ├── CHANGELOG.md            # Historique des changements
+    ├── COMMENCEZ_ICI.md        # Point de départ
+    ├── GUIDE_CREER_ADMIN.md    # Créer un admin
+    ├── GUIDE_DEPLOIEMENT_RENDER.md
+    ├── GUIDE_RAPIDE_MONGODB_RENDER.md
+    ├── INSTALL_MONGODB_LOCAL.md
+    └── RAPPORT_PROJET.md       # Rapport académique
 ```
 
-## 🔌 API Endpoints
+## 🚀 Démarrage Rapide
 
-### Authentification
+### Prérequis
+- Node.js 18+
+- MongoDB Atlas (ou local)
+- Compte Render.com (pour déploiement)
 
-| Méthode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| POST | `/register` | Inscription | ❌ |
-| POST | `/login` | Connexion | ❌ |
+### Installation Locale
 
-### Documents
+1. **Cloner le projet**
+```bash
+git clone <repo-url>
+cd Documents_perdus\ -\ V3
+```
 
-| Méthode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| POST | `/declaration` | Déclarer un document | ✅ |
-| GET | `/recherche` | Rechercher des documents | ✅ |
-| GET | `/documents` | Tous les documents (admin) | ✅ 👑 |
+2. **Configuration Backend**
+```bash
+cd backend
+npm install
+```
 
-Voir [backend/README.md](backend/README.md) pour la documentation complète de l'API.
-
-## 🔐 Sécurité
-
-- ✅ Mots de passe hachés avec **bcrypt** (10 rounds)
-- ✅ Authentification **JWT** (expiration 24h)
-- ✅ Variables d'environnement pour les secrets
-- ✅ Validation des entrées utilisateur
-- ✅ Contrôle d'accès par rôle
-- ✅ Gestion des erreurs sécurisée
-
-## 🧪 Comptes de test
-
-| Username | Password | Rôle |
-|----------|----------|------|
-| admin | admin123 | Admin |
-| declarant1 | 1234 | Déclarant |
-
-⚠️ **À supprimer en production**
-
-## 📖 Documentation complète
-
-- **API Backend:** [backend/README.md](backend/README.md)
-- **Rapport détaillé:** [RAPPORT_PROJET.md](RAPPORT_PROJET.md)
-
-## 🛠️ Technologies
-
-**Backend:**
-- Node.js + Express
-- JWT (jsonwebtoken)
-- bcrypt
-- CORS
-- dotenv
-
-**Frontend:**
-- HTML5 + CSS3
-- JavaScript Vanilla
-- Fetch API
-- LocalStorage
-
-## 📝 Variables d'environnement
-
-Créer un fichier `.env` dans le dossier `backend/` :
-
+Créer `.env` :
 ```env
-JWT_SECRET=votre-secret-jwt-changez-moi
-ADMIN_CODE=votre-code-admin
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/smartsearch
+JWT_SECRET=votre_secret_jwt
 PORT=3000
+NODE_ENV=production
 ```
 
-## 🐛 Problèmes connus
+3. **Démarrer le serveur**
+```bash
+npm start
+```
 
-- Stockage JSON (pas adapté pour production à grande échelle)
-- Pas de pagination sur la recherche
-- Pas de rate limiting sur les tentatives de connexion
+4. **Ouvrir le frontend**
+```bash
+# Ouvrir frontend/index.html dans le navigateur
+# Ou utiliser un serveur local
+cd ../frontend
+python -m http.server 8000
+```
 
-## 🚧 Améliorations futures
+## 📖 Documentation Principale
 
-- [ ] Migration vers PostgreSQL/MongoDB
-- [ ] Upload de photos de documents
-- [ ] Notifications email
-- [ ] Tests automatisés
-- [ ] CI/CD
-- [ ] Docker
-- [ ] HTTPS
+### Démarrage
+- 📘 **[COMMENCEZ_ICI.md](COMMENCEZ_ICI.md)** - Point d'entrée principal
+- 🏗️ **[ARCHITECTURE.md](ARCHITECTURE.md)** - Architecture technique
+- 📂 **[STRUCTURE.md](STRUCTURE.md)** - Structure détaillée
 
-## 📄 Licence
+### Déploiement
+- 🚀 **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Guide complet de déploiement
+- 🌐 **[GUIDE_DEPLOIEMENT_RENDER.md](GUIDE_DEPLOIEMENT_RENDER.md)** - Déploiement sur Render
+- 💾 **[GUIDE_RAPIDE_MONGODB_RENDER.md](GUIDE_RAPIDE_MONGODB_RENDER.md)** - MongoDB Atlas
+
+### Configuration
+- 🔐 **[GUIDE_CREER_ADMIN.md](GUIDE_CREER_ADMIN.md)** - Créer un compte admin
+- 🗄️ **[INSTALL_MONGODB_LOCAL.md](INSTALL_MONGODB_LOCAL.md)** - MongoDB en local
+
+### Corrections Récentes
+- 📝 **[CORRECTIONS_NOMENCLATURE.md](CORRECTIONS_NOMENCLATURE.md)** - Fix PERTE/DECOUVERTE
+- 📊 **[RESUME_CORRECTIONS.md](RESUME_CORRECTIONS.md)** - Vue d'ensemble
+- 🧪 **[GUIDE_TEST_MANUEL.md](GUIDE_TEST_MANUEL.md)** - Tests manuels
+
+### Académique
+- 📄 **[RAPPORT_PROJET.md](RAPPORT_PROJET.md)** - Rapport de projet M2 SIGL
+- 📜 **[CHANGELOG.md](CHANGELOG.md)** - Historique des versions
+
+## 🔑 Fonctionnalités Principales
+
+### Pour les Utilisateurs
+- ✅ **Déclaration** : Déclarer un document perdu ou trouvé
+- 🔍 **Recherche intelligente** : Recherche floue avec fuzzy matching
+- 📊 **Matching automatique** : Détection des correspondances PERTE ↔ DECOUVERTE
+- 📧 **Notifications** : Alertes en cas de correspondance
+
+### Pour les Administrateurs
+- 📊 **Dashboard** : Statistiques en temps réel
+- 👥 **Gestion utilisateurs** : CRUD complet
+- 🔍 **Gestion déclarations** : Validation et suppression
+- 📈 **Analytics** : Graphiques et tendances
+
+## 🛠️ Technologies Utilisées
+
+### Backend
+- **Node.js** + Express.js
+- **MongoDB** (Mongoose)
+- **JWT** pour l'authentification
+- **Fuse.js** pour la recherche floue
+- **Bcrypt** pour le hashing des mots de passe
+
+### Frontend
+- **HTML5 / CSS3 / JavaScript** vanilla
+- **Font Awesome** pour les icônes
+- **Chart.js** pour les graphiques (dashboard)
+
+### Déploiement
+- **Render.com** pour l'hébergement
+- **MongoDB Atlas** pour la base de données
+- **GitHub** pour le versionnement
+
+## 📊 Nomenclature Standard
+
+### Types de Déclaration
+| Interface | API | MongoDB |
+|-----------|-----|---------|
+| 📍 Perdu | `PERTE` | `type: "PERTE"` |
+| ✅ Trouvé | `DECOUVERTE` | `type: "DECOUVERTE"` |
+
+### Types de Documents
+- **CNI** - Carte Nationale d'Identité
+- **PASSEPORT** - Passeport
+- **PERMIS** - Permis de Conduire
+- **CARTE_SCOLAIRE** - Carte Scolaire
+- **DIPLOME** - Diplôme
+- **ACTE_NAISSANCE** - Acte de Naissance
+- **AUTRE** - Autre document
+
+## 🧪 Tests
+
+### Test Automatique
+```bash
+node test-nomenclature.js
+```
+
+### Test Manuel
+Suivre le **[GUIDE_TEST_MANUEL.md](GUIDE_TEST_MANUEL.md)**
+
+### Créer un Admin
+```bash
+node create-admin-production.js
+```
+
+## 🌐 URLs de Production
+
+- **Backend API** : `https://smartsearch-backend-pxw5.onrender.com`
+- **Frontend** : Hébergé sur GitHub Pages ou serveur statique
+- **MongoDB** : MongoDB Atlas
+
+## 📝 Scripts Utiles
+
+```bash
+# Backend
+cd backend
+npm start              # Démarrer en production
+npm run dev            # Démarrer en développement
+
+# Créer un admin
+node create-admin-production.js
+
+# Tester la nomenclature
+node test-nomenclature.js
+```
+
+## 🔒 Sécurité
+
+- ✅ Authentification JWT
+- ✅ Hashing des mots de passe (Bcrypt)
+- ✅ Validation des entrées
+- ✅ Rate limiting
+- ✅ CORS configuré
+- ✅ Protection CSRF
+
+## 📞 Support & Contact
+
+### Auteur
+**NGOA** - M2 SIGL
+
+### Issues
+Pour tout bug ou suggestion : créer une issue sur GitHub
+
+## 📅 Versions
+
+- **v3.0** (2026-06-15) - Correction nomenclature PERTE/DECOUVERTE
+- **v2.0** (2026-06-11) - Refonte complète avec MongoDB
+- **v1.0** (2026-03-28) - Version initiale
+
+## 📜 Licence
 
 Projet académique - M2 SIGL
 
-## 👨‍💻 Auteur
-
-**HERVEMEUPS** - 2026
-
 ---
 
-Pour plus de détails, consultez [RAPPORT_PROJET.md](RAPPORT_PROJET.md)
+✨ **Dernière mise à jour** : 15 juin 2026

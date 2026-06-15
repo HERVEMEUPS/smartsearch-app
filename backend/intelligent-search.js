@@ -37,7 +37,7 @@ function intelligentSearch(documents, searchCriteria) {
 
     // 1️⃣ Filtres stricts (date et type de déclaration)
     let filteredDocs = documents.filter(doc => {
-        if (typeDeclaration && doc.typeDeclaration !== typeDeclaration) return false;
+        if (typeDeclaration && doc.type !== typeDeclaration) return false;
 
         if (dateDebut) {
             const docDate = new Date(doc.date);
@@ -152,8 +152,8 @@ function intelligentSearch(documents, searchCriteria) {
  * Trouve les documents perdus qui matchent avec des documents trouvés
  */
 function findMatches(documents) {
-    const perdus = documents.filter(d => d.typeDeclaration === 'perdu');
-    const trouves = documents.filter(d => d.typeDeclaration === 'trouve' || d.typeDeclaration === 'trouvé');
+    const perdus = documents.filter(d => d.type === 'PERTE');
+    const trouves = documents.filter(d => d.type === 'DECOUVERTE');
 
     const matches = [];
 
@@ -288,8 +288,8 @@ function getSuggestions(documents, partialInput, field = 'nom') {
  */
 function getStatistics(documents) {
     const total = documents.length;
-    const perdus = documents.filter(d => d.typeDeclaration === 'perdu').length;
-    const trouves = documents.filter(d => d.typeDeclaration === 'trouve' || d.typeDeclaration === 'trouvé').length;
+    const perdus = documents.filter(d => d.type === 'PERTE').length;
+    const trouves = documents.filter(d => d.type === 'DECOUVERTE').length;
 
     // Correspondances
     const matches = findMatches(documents);

@@ -335,25 +335,10 @@ if (declarationForm) {
         const typeDeclarationValue = document.getElementById("typeDeclaration").value;
         const typeDocumentValue = document.getElementById("typeDocument").value;
 
-        // Mapper les valeurs du frontend vers le format attendu par le backend
-        const typeMapping = {
-            'perdu': 'PERTE',
-            'trouve': 'DECOUVERTE',
-            'trouvé': 'DECOUVERTE'
-        };
-
-        const typeDocMapping = {
-            'CNI': 'CNI',
-            'Passeport': 'PASSEPORT',
-            'Permis de Conduire': 'PERMIS',
-            'Carte Scolaire': 'CARTE_SCOLAIRE',
-            'Diplôme': 'DIPLOME',
-            'Acte de Naissance': 'ACTE_NAISSANCE'
-        };
-
+        // Les valeurs sont déjà au bon format dans le HTML (PERTE/DECOUVERTE, CNI/PASSEPORT/etc.)
         const documentData = {
-            type: typeMapping[typeDeclarationValue] || 'PERTE',
-            typeDocument: typeDocMapping[typeDocumentValue] || typeDocumentValue.toUpperCase().replace(/ /g, '_'),
+            type: typeDeclarationValue,
+            typeDocument: typeDocumentValue,
             nomPartiel: document.getElementById("nom").value,
             numeroPartiel: document.getElementById("numero").value,
             localisation: {
