@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test API - Documents Perdus</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #2196f3;
+        }
+        .success {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+        .error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        .document {
+            background: #f9f9f9;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #6c757d;
+        }
+        .document.PERTE {
+            border-left-color: #dc3545;
+            background: #fff5f5;
+        }
+        .document.DECOUVERTE {
+            border-left-color: #28a745;
+            background: #f0fff4;
+        }
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        .badge.PERTE {
+            background: #dc3545;
+        }
+        .badge.DECOUVERTE {
+            background: #28a745;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Diagnostic API - Documents Perdus</h1>
+
+        <div class="info">
+            <h3>Configuration actuelle</h3>
+            <p><strong>API URL:</strong> <span id="current-api-url"></span></p>
+            <p><strong>Token présent:</strong> <span id="token-status"></span></p>
+            <p><strong>Utilisateur:</strong> <span id="current-user"></span></p>
+        </div>
+
+        <div>
+            <button onclick="testLocalhost()">🖥️ Tester localhost:3000</button>
+            <button onclick="testRender()">☁️ Tester Render (Production)</button>
+            <button onclick="testCurrentAPI()">🔄 Tester API configurée</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Afficher la config actuelle
+        document.getElementById('current-api-url').textContent = API_URL;
+        document.getElementById('token-status').textContent = localStorage.getItem('token') ? '✅ Oui' : '❌ Non';
+        document.getElementById('current-user').textContent = localStorage.getItem('username') || 'Non connecté';
+
+        async function testAPI(url, label) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `<div class="info"><p>⏳ Test en cours de ${label}...</p></div>`;
+
+            const token = localStorage.getItem('token');
+
+            try {
+                // Test de santé
+                let healthStatus = '❌ Inaccessible';
+                try {
+                    const healthResponse = await fetch(`${url}/health`, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    if (healthResponse.ok) {
+                        healthStatus = '✅ En ligne';
+                    }
+                } catch (e) {
+                    healthStatus = '❌ Erreur de connexion: ' + e.message;
+                }
+
+                // Test des déclarations
+                const declarationsResponse = await fetch(`${url}/api/declarations`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!declarationsResponse.ok) {
+                    throw new Error(`HTTP ${declarationsResponse.status}: ${declarationsResponse.statusText}`);
+                }
+
+                const result = await declarationsResponse.json();
+                const declarations = result.success ? result.data : (Array.isArray(result) ? result : []);
+
+                // Statistiques
+                const total = declarations.length;
+                const perdus = declarations.filter(d => d.type === 'PERTE').length;
+                const trouves = declarations.filter(d => d.type === 'DECOUVERTE').length;
+
+                // Affichage des résultats
+                let html = `
+                    <div class="info success">
+                        <h3>✅ Résultats du test : ${label}</h3>
+                        <p><strong>Serveur:</strong> ${healthStatus}</p>
+                        <p><strong>URL:</strong> ${url}</p>
+                        <p><strong>Total documents:</strong> ${total}</p>
+                        <p><strong>Documents PERDUS:</strong> ${perdus} (${Math.round(perdus/total*100)}%)</p>
+                        <p><strong>Documents TROUVÉS:</strong> ${trouves} (${Math.round(trouves/total*100)}%)</p>
+                    </div>
+
+                    <h3>📋 Liste des documents (${total})</h3>
+                `;
+
+                declarations.forEach((doc, index) => {
+                    html += `
+                        <div class="document ${doc.type}">
+                            <p>
+                                <span class="badge ${doc.type}">${doc.type === 'PERTE' ? '📍 PERDU' : '✅ TROUVÉ'}</span>
+                                <strong>${doc.typeDocument || 'Type non spécifié'}</strong>
+                            </p>
+                            <p><strong>Nom:</strong> ${doc.nomPartiel || doc.nom || 'Non spécifié'}</p>
+                            <p><strong>Lieu:</strong> ${doc.localisation?.ville || doc.lieu || 'Non spécifié'}</p>
+                            <p><strong>Date:</strong> ${new Date(doc.dateEvenement || doc.date).toLocaleDateString('fr-FR')}</p>
+                            <p style="font-size: 12px; color: #666;"><strong>ID:</strong> ${doc._id || doc.id}</p>
+                        </div>
+                    `;
+                });
+
+                // Données brutes
+                html += `
+                    <h3>📊 Données brutes (JSON)</h3>
+                    <pre>${JSON.stringify(result, null, 2).substring(0, 2000)}</pre>
+                `;
+
+                resultsDiv.innerHTML = html;
+
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="info error">
+                        <h3>❌ Erreur lors du test : ${label}</h3>
+                        <p><strong>Message:</strong> ${error.message}</p>
+                        <p><strong>URL testée:</strong> ${url}</p>
+                        <p><strong>Suggestion:</strong> ${
+                            error.message.includes('Failed to fetch')
+                                ? 'Le serveur est probablement arrêté ou inaccessible.'
+                                : error.message.includes('401') || error.message.includes('403')
+                                    ? 'Vous n\'êtes pas autorisé. Connectez-vous d\'abord.'
+                                    : 'Erreur inconnue. Vérifiez la console pour plus de détails.'
+                        }</p>
+                    </div>
+                `;
+                console.error('Erreur complète:', error);
+            }
+        }
+
+        function testLocalhost() {
+            testAPI('http://localhost:3000', 'Serveur Local (Development)');
+        }
+
+        function testRender() {
+            testAPI('https://smartsearch-backend-pxw5.onrender.com', 'Serveur Render (Production)');
+        }
+
+        function testCurrentAPI() {
+            testAPI(API_URL, 'API configurée dans script.js');
+        }
+
+        // Test automatique au chargement
+        testCurrentAPI();
+    </script>
+</body>
+</html>

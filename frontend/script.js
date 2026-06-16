@@ -94,11 +94,11 @@ console.log("script.js chargé");
 /***************************************
  * CONFIGURATION GLOBALE
  ***************************************/
-// PRODUCTION (Render)
-// const API_URL = "https://smartsearch-backend-pxw5.onrender.com";
+// PRODUCTION (Render) - Pour tests en ligne
+const API_URL = "https://smartsearch-backend-pxw5.onrender.com";
 
 // DÉVELOPPEMENT LOCAL (MongoDB local avec données de test)
-const API_URL = "http://localhost:3000";
+// const API_URL = "http://localhost:3000";
 
 
 /***************************************
