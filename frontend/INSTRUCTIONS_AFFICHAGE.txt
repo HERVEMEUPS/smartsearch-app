@@ -1,0 +1,95 @@
+═══════════════════════════════════════════════════════════════════════════
+  🔧 COMMENT AFFICHER LES CORRESPONDANCES DANS LE DASHBOARD
+═══════════════════════════════════════════════════════════════════════════
+
+✅ Les correspondances SONT créées dans la base de données !
+✅ L'API backend fonctionne correctement !
+✅ Le code frontend est correct !
+
+⚠️  PROBLÈME : Vous n'êtes probablement pas connecté en tant qu'admin
+
+───────────────────────────────────────────────────────────────────────────
+📋 SOLUTION : Suivez ces 4 étapes simples
+───────────────────────────────────────────────────────────────────────────
+
+ÉTAPE 1️⃣ : Démarrer le Backend (si pas déjà fait)
+────────────────────────────────────────────
+Ouvrir un terminal et taper:
+    cd backend
+    npm run dev
+
+Attendre le message "✅ Serveur démarré sur le port 3000"
+
+
+ÉTAPE 2️⃣ : Se Connecter en tant qu'Admin
+────────────────────────────────────────
+1. Ouvrir le navigateur
+2. Aller sur: http://localhost:3000/frontend/login.html
+3. Entrer:
+   Username: admin
+   Password: admin
+4. Cliquer sur "Se connecter"
+
+
+ÉTAPE 3️⃣ : Ouvrir le Dashboard
+────────────────────────────────
+Aller sur: http://localhost:3000/frontend/dashboard.html
+
+
+ÉTAPE 4️⃣ : Voir les Correspondances
+────────────────────────────────────
+Scroller jusqu'à la section:
+    🔗 Correspondances Automatiques Détectées
+
+Vous devriez voir:
+    ✅ DJANGA Kymia - ACTE_NAISSANCE AN203/25 - 100%
+    ✅ MEUPIE - PERMIS Pe4325 - 100%
+
+
+───────────────────────────────────────────────────────────────────────────
+🧪 ALTERNATIVE : Page de Test Standalone
+───────────────────────────────────────────────────────────────────────────
+
+Si le dashboard ne fonctionne toujours pas:
+
+1. Ouvrir: http://localhost:3000/frontend/test-correspondances.html
+2. Cliquer sur "Se connecter en tant qu'admin"
+3. Cliquer sur "Charger les correspondances"
+4. Vous verrez les 2 correspondances s'afficher !
+
+
+───────────────────────────────────────────────────────────────────────────
+❓ PROBLÈMES COURANTS
+───────────────────────────────────────────────────────────────────────────
+
+Problème : "Identifiants incorrects"
+Solution : Utilisez admin / admin (en minuscules)
+
+Problème : "Erreur réseau" ou "Failed to fetch"
+Solution : Vérifiez que le backend tourne sur le port 3000
+
+Problème : "Aucune correspondance détectée"
+Solution : Actualisez la page (F5) ou cliquez sur 🔄 Actualiser
+
+Problème : Anciennes données affichées
+Solution : Videz le cache (Ctrl + Shift + R)
+
+
+───────────────────────────────────────────────────────────────────────────
+🎯 CE QUI A ÉTÉ CORRIGÉ
+───────────────────────────────────────────────────────────────────────────
+
+✅ Algorithme de matching amélioré
+✅ Filtrage souple sur les villes (case-insensitive)
+✅ Normalisation des numéros
+✅ Algorithme de Levenshtein pour typos
+✅ Bonus pour correspondances parfaites (+10%)
+✅ Score DJANGA Kymia : 90% → 100%
+
+Les correspondances SONT détectées et enregistrées !
+Il suffit maintenant de se connecter pour les voir.
+
+
+═══════════════════════════════════════════════════════════════════════════
+  📞 Besoin d'aide ? Consultez: Documentation/GUIDE_DEBUG_CORRESPONDANCES.md
+═══════════════════════════════════════════════════════════════════════════
