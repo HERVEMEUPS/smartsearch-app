@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Diagnostic Correspondances</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .step h2 {
+            color: #667eea;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        .result {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 2px solid #e9ecef;
+        }
+        .success { border-color: #28a745; background: #d4edda; color: #155724; }
+        .error { border-color: #dc3545; background: #f8d7da; color: #721c24; }
+        .warning { border-color: #ffc107; background: #fff3cd; color: #856404; }
+        .info { border-color: #17a2b8; background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin: 10px 10px 10px 0;
+        }
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .badge-success { background: #28a745; color: white; }
+        .badge-danger { background: #dc3545; color: white; }
+        .badge-warning { background: #ffc107; color: #333; }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .match-card {
+            background: white;
+            border: 2px solid #28a745;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .match-score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Diagnostic Complet - Correspondances</h1>
+        <p class="subtitle">Outil de débogage pour identifier pourquoi les correspondances ne s'affichent pas</p>
+
+        <div class="step">
+            <h2>📋 Étape 1: Vérification de la Session</h2>
+            <button onclick="checkSession()">Vérifier la Session</button>
+            <div id="session-result"></div>
+        </div>
+
+        <div class="step">
+            <h2>🔐 Étape 2: Connexion Admin</h2>
+            <button onclick="loginAdmin()">Se Connecter (admin/admin)</button>
+            <div id="login-result"></div>
+        </div>
+
+        <div class="step">
+            <h2>🗄️ Étape 3: Test Base de Données</h2>
+            <button onclick="testDatabase()">Vérifier les Correspondances en DB</button>
+            <div id="db-result"></div>
+        </div>
+
+        <div class="step">
+            <h2>🌐 Étape 4: Test API</h2>
+            <button onclick="testAPI()">Tester /api/correspondances</button>
+            <div id="api-result"></div>
+        </div>
+
+        <div class="step">
+            <h2>🎯 Étape 5: Affichage Final</h2>
+            <button onclick="displayMatches()">Charger et Afficher</button>
+            <div id="display-result"></div>
+        </div>
+
+        <div class="step">
+            <h2>🔧 Actions Correctives</h2>
+            <button onclick="fixSession()">Corriger la Session</button>
+            <button onclick="reopenDashboard()">Ouvrir le Dashboard</button>
+            <button onclick="runFullDiagnostic()">🚀 Diagnostic Complet Auto</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+
+        function checkSession() {
+            const resultDiv = document.getElementById('session-result');
+            resultDiv.innerHTML = '<div class="loading"></div> Vérification...';
+
+            const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
+            const username = localStorage.getItem('username');
+
+            if (!token) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <p><strong>❌ Aucune session active</strong></p>
+                        <p>Vous n'êtes pas connecté. Cliquez sur "Se Connecter" ci-dessous.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            resultDiv.innerHTML = `
+                <div class="result success">
+                    <p><strong>✅ Session active trouvée</strong></p>
+                    <p>👤 Username: <strong>${username || 'N/A'}</strong></p>
+                    <p>🔑 Rôle: <strong>${role || 'N/A'}</strong> ${role === 'admin' ? '<span class="badge badge-success">ADMIN</span>' : '<span class="badge badge-danger">NON ADMIN</span>'}</p>
+                    <p>🎫 Token: ${token.substring(0, 30)}...</p>
+                    ${role !== 'admin' ? '<p class="warning">⚠️ Attention: Vous devez être admin pour voir les correspondances !</p>' : ''}
+                </div>
+            `;
+        }
+
+        async function loginAdmin() {
+            const resultDiv = document.getElementById('login-result');
+            resultDiv.innerHTML = '<div class="loading"></div> Connexion en cours...';
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'admin', password: 'admin' })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    localStorage.setItem('token', result.data.accessToken);
+                    localStorage.setItem('role', result.data.user.role);
+                    localStorage.setItem('username', result.data.user.username);
+
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <p><strong>✅ Connexion réussie !</strong></p>
+                            <p>👤 ${result.data.user.username}</p>
+                            <p>🔑 Rôle: <strong>${result.data.user.role}</strong></p>
+                            <p>✨ Vous pouvez maintenant accéder aux correspondances !</p>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(result.message || 'Échec de connexion');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <p><strong>❌ Erreur de connexion</strong></p>
+                        <p>${error.message}</p>
+                        <p>Vérifiez que le backend est démarré sur ${API_URL}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testDatabase() {
+            const resultDiv = document.getElementById('db-result');
+            resultDiv.innerHTML = '<div class="loading"></div> Interrogation de la base de données...';
+
+            resultDiv.innerHTML = `
+                <div class="result info">
+                    <p><strong>ℹ️ Test Base de Données</strong></p>
+                    <p>Pour vérifier la base de données directement, exécutez dans un terminal:</p>
+                    <pre>cd backend
+node check-correspondances.js</pre>
+                    <p>Cela affichera toutes les correspondances stockées en DB.</p>
+                    <p>Selon nos tests précédents: <strong>2 correspondances</strong> sont présentes.</p>
+                </div>
+            `;
+        }
+
+        async function testAPI() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = '<div class="loading"></div> Test de l\'API...';
+
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <p><strong>❌ Pas de token</strong></p>
+                        <p>Connectez-vous d'abord avec le bouton ci-dessus.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/correspondances`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                const correspondances = result.data || [];
+
+                resultDiv.innerHTML = `
+                    <div class="result ${correspondances.length > 0 ? 'success' : 'warning'}">
+                        <p><strong>${correspondances.length > 0 ? '✅' : '⚠️'} API Response</strong></p>
+                        <p>Correspondances trouvées: <strong>${correspondances.length}</strong></p>
+                        ${correspondances.length === 0 ? '<p>⚠️ L\'API ne retourne aucune correspondance. Elles existent peut-être en DB mais ne sont pas retournées.</p>' : ''}
+                        <details>
+                            <summary style="cursor: pointer; margin-top: 10px;">📋 Voir le JSON brut</summary>
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <p><strong>❌ Erreur API</strong></p>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function displayMatches() {
+            const resultDiv = document.getElementById('display-result');
+            resultDiv.innerHTML = '<div class="loading"></div> Chargement...';
+
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <p><strong>❌ Pas de token</strong></p>
+                        <p>Connectez-vous d'abord.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/correspondances`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const result = await response.json();
+                const correspondances = result.data || [];
+
+                if (correspondances.length === 0) {
+                    resultDiv.innerHTML = `
+                        <div class="result warning">
+                            <p><strong>⚠️ Aucune correspondance retournée par l'API</strong></p>
+                            <p>Problème possible:</p>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                <li>Les correspondances existent en DB mais ne sont pas populées</li>
+                                <li>Problème dans le service de récupération</li>
+                                <li>Filtre trop restrictif</li>
+                            </ul>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const html = correspondances.map((match, index) => {
+                    const perte = match.declarationPerteId || {};
+                    const decouverte = match.declarationDecouverteId || {};
+                    const score = Math.round((match.scoreGlobal || 0) * 100);
+
+                    return `
+                        <div class="match-card">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <h3 style="margin: 0;">${index + 1}. 🔗 Correspondance</h3>
+                                <span class="match-score">${score}%</span>
+                            </div>
+                            <p><strong>📄 Type:</strong> ${perte.typeDocument || 'N/A'}</p>
+                            <p><strong>⚡ Statut:</strong> <span class="badge ${match.statut === 'PROPOSEE' ? 'badge-warning' : 'badge-success'}">${match.statut || 'PROPOSEE'}</span></p>
+                            <hr style="margin: 15px 0; border: none; border-top: 2px solid #e9ecef;">
+                            <div style="background: #fff5f5; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                                <p style="color: #dc3545; font-weight: bold;">🔴 PERDU</p>
+                                <p>👤 ${perte.nomPartiel || 'N/A'}</p>
+                                <p>🔢 ${perte.numeroPartiel || 'N/A'}</p>
+                                <p>📍 ${perte.localisation?.ville || 'N/A'}</p>
+                            </div>
+                            <div style="background: #f0fff4; padding: 10px; border-radius: 8px;">
+                                <p style="color: #28a745; font-weight: bold;">🟢 TROUVÉ</p>
+                                <p>👤 ${decouverte.nomPartiel || 'N/A'}</p>
+                                <p>🔢 ${decouverte.numeroPartiel || 'N/A'}</p>
+                                <p>📍 ${decouverte.localisation?.ville || 'N/A'}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <p><strong>✅ ${correspondances.length} correspondance(s) trouvée(s) !</strong></p>
+                    </div>
+                    ${html}
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <p><strong>❌ Erreur</strong></p>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function fixSession() {
+            localStorage.clear();
+            alert('✅ Session effacée ! Reconnectez-vous maintenant.');
+            location.reload();
+        }
+
+        function reopenDashboard() {
+            window.open('http://localhost:3000/frontend/dashboard.html', '_blank');
+        }
+
+        async function runFullDiagnostic() {
+            checkSession();
+            await new Promise(r => setTimeout(r, 1000));
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                await loginAdmin();
+                await new Promise(r => setTimeout(r, 1000));
+            }
+
+            testDatabase();
+            await new Promise(r => setTimeout(r, 1000));
+
+            await testAPI();
+            await new Promise(r => setTimeout(r, 1000));
+
+            await displayMatches();
+        }
+
+        // Auto-check au chargement
+        window.addEventListener('DOMContentLoaded', () => {
+            checkSession();
+        });
+    </script>
+</body>
+</html>
