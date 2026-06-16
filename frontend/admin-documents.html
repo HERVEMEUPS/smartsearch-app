@@ -854,17 +854,6 @@
                 allDocuments = result.success ? result.data : (Array.isArray(result) ? result : []);
                 filteredDocuments = [...allDocuments];
 
-                // 🔍 DEBUG : Afficher les types de documents
-                console.log('📊 Total documents:', allDocuments.length);
-                console.log('📊 Documents PERTE:', allDocuments.filter(d => d.type === 'PERTE').length);
-                console.log('📊 Documents DECOUVERTE:', allDocuments.filter(d => d.type === 'DECOUVERTE').length);
-                console.log('📋 Premiers documents:', allDocuments.slice(0, 3).map(d => ({
-                    id: d.id,
-                    type: d.type,
-                    nom: d.nom || d.nomPartiel,
-                    typeDocument: d.typeDocument
-                })));
-
                 // Charger les correspondances
                 const matchResponse = await fetch(`${API_URL}/api/correspondances`, {
                     headers: { "Authorization": `Bearer ${token}` }
