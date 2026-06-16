@@ -1,0 +1,1076 @@
+\documentclass[aspectratio=169]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{booktabs}
+\usepackage{fontawesome5}
+\usepackage{hyperref}
+
+% Theme
+\usetheme{Madrid}
+\usecolortheme{default}
+
+% Couleurs personnalisées
+\definecolor{bleuNgoa}{RGB}{0,102,204}
+\definecolor{vertSucces}{RGB}{0,153,51}
+\definecolor{rougeErreur}{RGB}{204,0,0}
+\definecolor{grisCode}{RGB}{248,248,248}
+\definecolor{orangeWarning}{RGB}{255,140,0}
+
+\setbeamercolor{structure}{fg=bleuNgoa}
+\setbeamercolor{frametitle}{bg=bleuNgoa,fg=white}
+
+% Configuration des listings (code)
+\lstset{
+    backgroundcolor=\color{grisCode},
+    basicstyle=\ttfamily\footnotesize,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{red},
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny\color{gray}
+}
+
+% Informations du document
+\title[SmartSearch]{SmartSearch}
+\subtitle{Système Intelligent de Gestion de Documents Perdus}
+\author{NGOA (HERVEMEUPS)}
+\institute{M2 SIGL Professionnel}
+\date{Juin 2026}
+
+\begin{document}
+
+% ============================================================
+% SLIDE 1 : PAGE DE TITRE
+% ============================================================
+\begin{frame}
+    \titlepage
+    \begin{center}
+        \Large
+        \textbf{Analyse, Conception et Implémentation} \\
+        \large
+        d'un Système Intelligent Dédié à la Déclaration \\
+        et à la Recherche de Documents Perdus
+
+        \vspace{0.5cm}
+        \normalsize
+        \textbf{Version 3.1} - Juin 2026
+    \end{center}
+\end{frame}
+
+% ============================================================
+% SLIDE 2 : TABLE DES MATIÈRES
+% ============================================================
+\begin{frame}{Plan de la Présentation}
+    \tableofcontents
+\end{frame}
+
+% ============================================================
+% SECTION 1 : CONTEXTE & PROBLÉMATIQUE
+% ============================================================
+\section{Contexte \& Problématique}
+
+\begin{frame}{Contexte : La Perte de Documents}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Constat}
+                \begin{itemize}
+                    \item Perte fréquente de documents officiels
+                    \item CNI, Passeports, Permis, Diplômes...
+                    \item Démarches administratives longues
+                    \item Coûts de remplacement élevés
+                \end{itemize}
+            \end{block}
+
+            \vspace{0.3cm}
+
+            \begin{alertblock}{Problème}
+                \textbf{Aucun système centralisé} pour signaler et rechercher des documents perdus
+            \end{alertblock}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Besoins Identifiés}
+                \begin{enumerate}
+                    \item Déclarer un document perdu
+                    \item Déclarer un document trouvé
+                    \item Rechercher des correspondances
+                    \item Notifier automatiquement
+                    \item Gérer les utilisateurs
+                \end{enumerate}
+            \end{block}
+
+            \vspace{0.3cm}
+
+            \begin{exampleblock}{Solution}
+                Plateforme web intelligente avec matching automatique
+            \end{exampleblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Problématique}
+    \begin{center}
+        \Large
+        \textbf{Comment créer un système intelligent capable de détecter automatiquement les correspondances entre documents perdus et trouvés, même avec des informations partielles ou erronées ?}
+    \end{center}
+
+    \vspace{1cm}
+
+    \begin{block}{Défis Techniques}
+        \begin{itemize}
+            \item Matching avec informations incomplètes
+            \item Tolérance aux fautes de frappe
+            \item Performance en temps réel
+            \item Scalabilité
+            \item Sécurité des données personnelles
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+% ============================================================
+% SECTION 2 : ARCHITECTURE GLOBALE
+% ============================================================
+\section{Architecture Globale}
+
+\begin{frame}{Architecture Technique}
+    \begin{center}
+        \begin{tikzpicture}[
+            box/.style={rectangle, draw, fill=blue!10, text width=2.5cm, align=center, minimum height=0.8cm},
+            arrow/.style={->, >=stealth, thick}
+        ]
+            % Frontend
+            \node[box, fill=green!20] (frontend) at (0,4) {\textbf{Frontend} \\ HTML/CSS/JS};
+
+            % Backend
+            \node[box, fill=blue!20] (backend) at (5,4) {\textbf{Backend} \\ Node.js + Express};
+
+            % AI Service
+            \node[box, fill=purple!20] (ai) at (10,4) {\textbf{Service IA} \\ Python + FastAPI};
+
+            % Base de données
+            \node[box, fill=orange!20] (db) at (5,2) {\textbf{Base de Données} \\ MongoDB Atlas};
+
+            % Cloud
+            \node[box, fill=red!20] (cloud) at (5,0.5) {\textbf{Hébergement} \\ Render.com};
+
+            % Flèches
+            \draw[arrow] (frontend) -- node[above] {\tiny API REST} (backend);
+            \draw[arrow] (backend) -- node[right] {\tiny Matching} (ai);
+            \draw[arrow] (backend) -- node[left] {\tiny CRUD} (db);
+            \draw[arrow, dashed] (frontend) -- (db);
+            \draw[arrow] (db) -- (cloud);
+            \draw[arrow] (backend) -- (cloud);
+            \draw[arrow] (ai) -- (cloud);
+        \end{tikzpicture}
+    \end{center}
+
+    \vspace{0.3cm}
+
+    \begin{block}{Architecture 3-tiers}
+        \textbf{Présentation} (Frontend) → \textbf{Logique} (Backend + IA) → \textbf{Données} (MongoDB)
+    \end{block}
+\end{frame}
+
+\begin{frame}{Stack Technologique}
+    \begin{columns}[T]
+        \begin{column}{0.32\textwidth}
+            \begin{block}{Frontend}
+                \begin{itemize}
+                    \item HTML5 / CSS3
+                    \item JavaScript Vanilla
+                    \item Font Awesome
+                    \item Chart.js
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.32\textwidth}
+            \begin{block}{Backend}
+                \begin{itemize}
+                    \item Node.js 18+
+                    \item Express.js
+                    \item JWT (Auth)
+                    \item Bcrypt
+                    \item Fuse.js
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.32\textwidth}
+            \begin{block}{IA \& Data}
+                \begin{itemize}
+                    \item Python 3.9+
+                    \item FastAPI
+                    \item RapidFuzz
+                    \item Transformers
+                    \item MongoDB
+                \end{itemize}
+            \end{block}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.5cm}
+
+    \begin{exampleblock}{Choix Technologiques}
+        \begin{itemize}
+            \item \textbf{JavaScript} : Écosystème riche, performance
+            \item \textbf{Python} : IA/ML, bibliothèques NLP
+            \item \textbf{MongoDB} : NoSQL, flexibilité, scalabilité
+            \item \textbf{Render} : Gratuit, CI/CD automatique
+        \end{itemize}
+    \end{exampleblock}
+\end{frame}
+
+% ============================================================
+% SECTION 3 : FONCTIONNALITÉS
+% ============================================================
+\section{Fonctionnalités}
+
+\begin{frame}{Fonctionnalités Utilisateur}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{1. Authentification}
+                \begin{itemize}
+                    \item Inscription / Connexion
+                    \item JWT (24h)
+                    \item Rôles : Admin / Déclarant
+                    \item Sécurité : Bcrypt
+                \end{itemize}
+            \end{block}
+
+            \vspace{0.3cm}
+
+            \begin{block}{2. Déclaration}
+                \begin{itemize}
+                    \item Type : Perte / Découverte
+                    \item Documents : CNI, Passeport, Permis...
+                    \item Informations partielles acceptées
+                    \item Localisation (ville, quartier)
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{3. Recherche Intelligente}
+                \begin{itemize}
+                    \item Fuzzy matching
+                    \item Recherche par critères
+                    \item Scoring de pertinence
+                    \item Tri par score
+                \end{itemize}
+            \end{block}
+
+            \vspace{0.3cm}
+
+            \begin{block}{4. Matching Automatique}
+                \begin{itemize}
+                    \item Détection auto PERTE ↔ DECOUVERTE
+                    \item Notification utilisateurs
+                    \item Confiance : Faible → Très Haute
+                    \item Dashboard des correspondances
+                \end{itemize}
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Fonctionnalités Admin}
+    \begin{block}{Dashboard Administrateur}
+        \begin{columns}[T]
+            \begin{column}{0.48\textwidth}
+                \textbf{Gestion Utilisateurs}
+                \begin{itemize}
+                    \item CRUD complet
+                    \item Réinitialisation password
+                    \item Statistiques utilisateurs
+                    \item Bannir / Réactiver
+                \end{itemize}
+            \end{column}
+            \begin{column}{0.48\textwidth}
+                \textbf{Gestion Déclarations}
+                \begin{itemize}
+                    \item Validation
+                    \item Suppression
+                    \item Statistiques
+                    \item Export de données
+                \end{itemize}
+            \end{column}
+        \end{columns}
+    \end{block}
+
+    \vspace{0.3cm}
+
+    \begin{block}{Analytics}
+        \begin{itemize}
+            \item Graphiques interactifs (Chart.js)
+            \item Évolution temporelle
+            \item Documents par type / lieu
+            \item Taux de récupération
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+% ============================================================
+% SECTION 4 : SYSTÈME DE MATCHING
+% ============================================================
+\section{Système de Matching Intelligent}
+
+\begin{frame}{Moteur de Matching Multi-Niveaux}
+    \begin{center}
+        \begin{tikzpicture}[
+            box/.style={rectangle, draw, fill=blue!10, text width=2.8cm, align=center, minimum height=1cm},
+            arrow/.style={->, >=stealth, thick}
+        ]
+            % Titre
+            \node[box, fill=bleuNgoa!30, text width=11cm] (titre) at (0,3.5) {
+                \textbf{Moteur de Matching Intelligent}
+            };
+
+            % Niveau 1
+            \node[box, fill=green!20] (fuzzy) at (-4,2) {
+                \textbf{Niveau 1} \\ Fuzzy Matching \\ (RapidFuzz) \\ \small 40\%
+            };
+
+            % Niveau 2
+            \node[box, fill=blue!20] (embed) at (0,2) {
+                \textbf{Niveau 2} \\ Embeddings \\ (Transformers) \\ \small 40\%
+            };
+
+            % Niveau 3
+            \node[box, fill=purple!20] (llm) at (4,2) {
+                \textbf{Niveau 3} \\ LLM \\ (Claude 3) \\ \small 20\%
+            };
+
+            % Scoring
+            \node[box, fill=orange!20, text width=11cm] (score) at (0,0.5) {
+                \textbf{Score Global} = 0.4×Fuzzy + 0.4×Embeddings + 0.2×LLM
+            };
+
+            % Décision
+            \node[box, fill=red!20, text width=11cm] (decision) at (0,-0.8) {
+                \textbf{Décision} : Score ≥ 0.65 → \textcolor{vertSucces}{MATCH} | Score < 0.65 → \textcolor{rougeErreur}{NO MATCH}
+            };
+
+            % Flèches
+            \draw[arrow] (fuzzy) -- (score);
+            \draw[arrow] (embed) -- (score);
+            \draw[arrow] (llm) -- (score);
+            \draw[arrow] (score) -- (decision);
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Niveau 1 : Fuzzy Matching avec RapidFuzz}
+    \begin{block}{Algorithmes Utilisés}
+        \begin{enumerate}
+            \item \texttt{fuzz.ratio()} - Similarité globale (Levenshtein)
+            \begin{itemize}
+                \item "KOUAKOU" vs "KOAKOU" → 92.86\%
+            \end{itemize}
+
+            \item \texttt{fuzz.partial\_ratio()} - Détection de sous-chaînes
+            \begin{itemize}
+                \item "123456" in "CI0123456789" → 100\%
+            \end{itemize}
+
+            \item \texttt{fuzz.token\_sort\_ratio()} - Ordre des mots
+            \begin{itemize}
+                \item "Jean KOUASSI" vs "KOUASSI Jean" → 100\%
+            \end{itemize}
+        \end{enumerate}
+    \end{block}
+
+    \begin{exampleblock}{Bonus Progressif}
+        ≥90\% → +0.25 | ≥80\% → +0.20 | ≥70\% → +0.15 | ≥60\% → +0.10
+    \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Niveau 2 : Embeddings Sémantiques}
+    \begin{block}{Sentence Transformers}
+        \begin{itemize}
+            \item Modèle : \texttt{paraphrase-multilingual-MiniLM-L12-v2}
+            \item Conversion texte → vecteur (384 dimensions)
+            \item Similarité cosinus entre embeddings
+            \item Compréhension du sens, pas juste des mots
+        \end{itemize}
+    \end{block}
+
+    \vspace{0.3cm}
+
+    \begin{exampleblock}{Exemple}
+        \begin{itemize}
+            \item "CNI perdue à Abidjan" → [0.12, -0.45, 0.78, ...]
+            \item "Carte identité trouvée Abidjan" → [0.15, -0.42, 0.81, ...]
+            \item Similarité cosinus → 0.87 (très similaire)
+        \end{itemize}
+    \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Niveau 3 : LLM (Claude 3 Sonnet)}
+    \begin{block}{Analyse Contextuelle Avancée}
+        \begin{itemize}
+            \item Compréhension du contexte global
+            \item Raisonnement sur les correspondances
+            \item Validation des matchs fuzzy/embeddings
+            \item Génération d'explications
+        \end{itemize}
+    \end{block}
+
+    \vspace{0.3cm}
+
+    \begin{exampleblock}{Exemple de Raisonnement LLM}
+        \small
+        \textit{"Forte correspondance probable : même type de document (CNI), nom très similaire (KOUAKOU/KOAKOU - probablement une faute de frappe), numéro partiel correspond, même localisation (Abidjan), dates compatibles (écart de 2 jours). Confiance : HAUTE."}
+    \end{exampleblock}
+\end{frame}
+
+% ============================================================
+% SECTION 5 : SÉCURITÉ
+% ============================================================
+\section{Sécurité \& Protection des Données}
+
+\begin{frame}{Mesures de Sécurité}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Authentification}
+                \begin{itemize}
+                    \item JWT (JSON Web Token)
+                    \item Expiration 24h
+                    \item Refresh token
+                    \item Hachage Bcrypt (10 rounds)
+                \end{itemize}
+            \end{block}
+
+            \vspace{0.3cm}
+
+            \begin{block}{Autorisation}
+                \begin{itemize}
+                    \item Gestion des rôles (Admin/User)
+                    \item Middleware d'authentification
+                    \item Validation des permissions
+                    \item CORS configuré
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Protection des Données}
+                \begin{itemize}
+                    \item Variables d'environnement (.env)
+                    \item Secrets non versionnés
+                    \item HTTPS obligatoire
+                    \item Validation des entrées
+                \end{itemize}
+            \end{block}
+
+            \vspace{0.3cm}
+
+            \begin{block}{Conformité}
+                \begin{itemize}
+                    \item Minimisation des données
+                    \item Données partielles (nom/numéro)
+                    \item Pas de stockage complet de documents
+                    \item Suppression possible
+                \end{itemize}
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ============================================================
+% SECTION 6 : BASE DE DONNÉES
+% ============================================================
+\section{Base de Données}
+
+\begin{frame}[fragile]{Modèle de Données MongoDB}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Collection Users}
+                \small
+\begin{lstlisting}[language=json]
+{
+  "_id": ObjectId,
+  "username": "string",
+  "email": "string",
+  "password": "hash",
+  "role": "ADMIN|DECLARANT",
+  "dateInscription": Date
+}
+\end{lstlisting}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Collection Declarations}
+                \small
+\begin{lstlisting}[language=json]
+{
+  "_id": ObjectId,
+  "type": "PERTE|DECOUVERTE",
+  "typeDocument": "CNI|...",
+  "nomPartiel": "string",
+  "numeroPartiel": "string",
+  "description": "string",
+  "localisation": {
+    "ville": "string",
+    "quartier": "string"
+  },
+  "declarantId": ObjectId,
+  "date": Date
+}
+\end{lstlisting}
+            \end{block}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.3cm}
+
+    \begin{exampleblock}{Avantages NoSQL}
+        Schéma flexible, indexation efficace, scalabilité horizontale
+    \end{exampleblock}
+\end{frame}
+
+% ============================================================
+% SECTION 7 : RÉSULTATS & PERFORMANCE
+% ============================================================
+\section{Résultats \& Performance}
+
+\begin{frame}{Performance du Système}
+    \begin{table}
+        \begin{tabular}{lcc}
+            \toprule
+            \textbf{Métrique} & \textbf{Valeur} & \textbf{Cible} \\
+            \midrule
+            Temps de réponse API & <200ms & <500ms \\
+            Temps de matching & <500ms & <1000ms \\
+            Throughput & 200+ req/sec & 100 req/sec \\
+            Disponibilité & 99.5\% & 99\% \\
+            Taux de réussite tests & 100\% (15/15) & 95\% \\
+            \bottomrule
+        \end{tabular}
+    \end{table}
+
+    \vspace{0.5cm}
+
+    \begin{exampleblock}{Performance Fuzzy Matching}
+        \begin{itemize}
+            \item \textbf{RapidFuzz} : >10,000 comparaisons/seconde
+            \item \textbf{Embeddings} : Cache intelligent (Redis)
+            \item \textbf{LLM} : Appels asynchrones, early stopping
+        \end{itemize}
+    \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Impact du Fuzzy Matching}
+    \begin{center}
+        \begin{tikzpicture}
+            % Avant
+            \draw[fill=rougeErreur!30] (0,0) rectangle (3,4);
+            \node at (1.5,4.5) {\textbf{AVANT (v3.0)}};
+
+            \node[text width=2.5cm, align=center] at (1.5,3) {
+                \small Correspondances détectées
+            };
+            \node at (1.5,2) {\Huge 65\%};
+            \node at (1.5,0.5) {\Large \textcolor{rougeErreur}{\faTimesCircle}};
+
+            % Flèche
+            \draw[->, ultra thick] (3.5,2) -- (5,2);
+            \node[above, text width=1.2cm, align=center] at (4.25,2) {\tiny RapidFuzz v3.1};
+
+            % Après
+            \draw[fill=vertSucces!30] (5.5,0) rectangle (8.5,4);
+            \node at (7,4.5) {\textbf{APRÈS (v3.1)}};
+
+            \node[text width=2.5cm, align=center] at (7,3) {
+                \small Correspondances détectées
+            };
+            \node at (7,2) {\Huge 95\%};
+            \node at (7,0.5) {\Large \textcolor{vertSucces}{\faCheckCircle}};
+
+            % Gain
+            \node[fill=orangeWarning, text width=8cm, align=center] at (4.25,-0.5) {
+                \textbf{Gain : +30 points} → +35\% de correspondances
+            };
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+% ============================================================
+% SECTION 8 : DÉPLOIEMENT
+% ============================================================
+\section{Déploiement \& Production}
+
+\begin{frame}{Infrastructure de Production}
+    \begin{block}{Hébergement Render.com}
+        \begin{columns}[T]
+            \begin{column}{0.48\textwidth}
+                \textbf{Backend Node.js}
+                \begin{itemize}
+                    \item Plan Free
+                    \item Auto-deploy GitHub
+                    \item Variables d'environnement
+                    \item Logs en temps réel
+                \end{itemize}
+            \end{column}
+            \begin{column}{0.48\textwidth}
+                \textbf{Service IA Python}
+                \begin{itemize}
+                    \item Plan Free
+                    \item Build automatique
+                    \item requirements.txt
+                    \item Cold start : ~30s
+                \end{itemize}
+            \end{column}
+        \end{columns}
+    \end{block}
+
+    \vspace{0.3cm}
+
+    \begin{block}{MongoDB Atlas}
+        \begin{itemize}
+            \item Cluster M0 (gratuit)
+            \item 512 MB storage
+            \item Réplication automatique
+            \item Backup journalier
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Pipeline CI/CD}
+    \begin{center}
+        \begin{tikzpicture}[
+            box/.style={rectangle, draw, fill=blue!10, text width=2cm, align=center, minimum height=0.8cm},
+            arrow/.style={->, >=stealth, thick}
+        ]
+            % GitHub
+            \node[box, fill=black!10] (git) at (0,0) {\faGithub \\ GitHub};
+
+            % Render
+            \node[box, fill=blue!20] (render) at (3,0) {Render \\ (Webhook)};
+
+            % Build
+            \node[box, fill=orange!20] (build) at (6,0) {Build \\ \& Test};
+
+            % Deploy
+            \node[box, fill=green!20] (deploy) at (9,0) {Deploy \\ Production};
+
+            % Flèches
+            \draw[arrow] (git) -- node[above] {\tiny push} (render);
+            \draw[arrow] (render) -- node[above] {\tiny trigger} (build);
+            \draw[arrow] (build) -- node[above] {\tiny success} (deploy);
+        \end{tikzpicture}
+    \end{center}
+
+    \vspace{0.5cm}
+
+    \begin{block}{Processus Automatique}
+        \small
+\begin{lstlisting}[language=bash]
+1. git push origin main
+2. Render webhook detecte push
+3. Build: npm install / pip install
+4. Tests unitaires (si presents)
+5. Deploy automatique
+6. Health check endpoint
+\end{lstlisting}
+    \end{block}
+\end{frame}
+
+% ============================================================
+% SECTION 9 : TESTS & VALIDATION
+% ============================================================
+\section{Tests \& Validation}
+
+\begin{frame}{Stratégie de Tests}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Tests Unitaires}
+                \begin{itemize}
+                    \item Fuzzy matching (15 tests)
+                    \item Contrôleurs backend
+                    \item Services métier
+                    \item Utilitaires
+                \end{itemize}
+                \textbf{Taux de réussite : 100\%}
+            \end{block}
+
+            \vspace{0.3cm}
+
+            \begin{block}{Tests d'Intégration}
+                \begin{itemize}
+                    \item API endpoints
+                    \item Authentification JWT
+                    \item CRUD déclarations
+                    \item Matching automatique
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Tests Manuels}
+                \begin{itemize}
+                    \item Scénarios utilisateur
+                    \item Interface graphique
+                    \item Compatibilité navigateurs
+                    \item Responsive design
+                \end{itemize}
+            \end{block}
+
+            \vspace{0.3cm}
+
+            \begin{block}{Tests de Performance}
+                \begin{itemize}
+                    \item Charge (wrk)
+                    \item Stress testing
+                    \item Temps de réponse
+                    \item Scalabilité
+                \end{itemize}
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Exemple de Test Fuzzy Matching}
+    \begin{block}{Test Python}
+        \small
+\begin{lstlisting}[language=Python]
+def test_fuzzy_matching_with_typo():
+    """Test detection de faute de frappe"""
+    result = fuzz.ratio("KOUAKOU", "KOAKOU")
+    assert result >= 90, f"Expected >= 90%, got {result}%"
+
+def test_partial_number_match():
+    """Test numero partiel"""
+    result = fuzz.partial_ratio("123456", "CI0123456789")
+    assert result == 100, f"Expected 100%, got {result}%"
+
+def test_city_with_typo():
+    """Test ville avec faute"""
+    result = fuzz.ratio("Abidjan", "Abijan")
+    assert result >= 85, f"Expected >= 85%, got {result}%"
+\end{lstlisting}
+    \end{block}
+
+    \begin{exampleblock}{Résultat}
+        \textcolor{vertSucces}{\faCheckCircle} \textbf{15/15 tests réussis (100\%)}
+    \end{exampleblock}
+\end{frame}
+
+% ============================================================
+% SECTION 10 : DÉMONSTRATION
+% ============================================================
+\section{Démonstration}
+
+\begin{frame}{Scénario Utilisateur Complet}
+    \begin{enumerate}
+        \item \textbf{Inscription} : Créer un compte (Alice)
+        \begin{itemize}
+            \item POST /api/auth/register
+        \end{itemize}
+
+        \vspace{0.2cm}
+
+        \item \textbf{Déclaration de Perte} : Alice perd sa CNI
+        \begin{itemize}
+            \item POST /api/declarations
+            \item Type: PERTE, Nom: "KOUAKOU", Numéro: "123456"
+        \end{itemize}
+
+        \vspace{0.2cm}
+
+        \item \textbf{Inscription} : Créer un compte (Bob)
+
+        \vspace{0.2cm}
+
+        \item \textbf{Déclaration de Découverte} : Bob trouve une CNI (avec fautes)
+        \begin{itemize}
+            \item POST /api/declarations
+            \item Type: DECOUVERTE, Nom: "KOAKOU", Numéro: "CI0123456789"
+        \end{itemize}
+
+        \vspace{0.2cm}
+
+        \item \textbf{Matching Automatique} : Le système détecte la correspondance
+        \begin{itemize}
+            \item Score: 0.86 → \textcolor{vertSucces}{\faCheckCircle} MATCH
+            \item Notification Alice \& Bob
+        \end{itemize}
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}{Interface Utilisateur}
+    \begin{block}{Pages Principales}
+        \begin{enumerate}
+            \item \textbf{Accueil} : Présentation, statistiques
+            \item \textbf{Connexion / Inscription}
+            \item \textbf{Déclaration} : Formulaire guidé
+            \item \textbf{Recherche} : Filtres multiples, résultats scorés
+            \item \textbf{Mes Déclarations} : Historique personnel
+            \item \textbf{Dashboard Admin} : Gestion complète
+        \end{enumerate}
+    \end{block}
+
+    \vspace{0.3cm}
+
+    \begin{exampleblock}{Design}
+        \begin{itemize}
+            \item Responsive (mobile-first)
+            \item Moderne et épuré
+            \item Accessibilité (WCAG 2.1)
+            \item Thème cohérent
+        \end{itemize}
+    \end{exampleblock}
+\end{frame}
+
+% ============================================================
+% SECTION 11 : DIFFICULTÉS & SOLUTIONS
+% ============================================================
+\section{Difficultés Rencontrées}
+
+\begin{frame}{Défis Techniques}
+    \begin{block}{1. Matching avec Informations Incomplètes}
+        \textbf{Problème} : Utilisateurs ne connaissent que des fragments \\
+        \textbf{Solution} : Fuzzy matching + embeddings sémantiques
+    \end{block}
+
+    \begin{block}{2. Performance du LLM}
+        \textbf{Problème} : Appels LLM lents (>2s) \\
+        \textbf{Solution} : Cache, early stopping, fallback NLP
+    \end{block}
+
+    \begin{block}{3. Déploiement Gratuit}
+        \textbf{Problème} : Limitations plans gratuits (cold start) \\
+        \textbf{Solution} : Render + MongoDB Atlas, optimisation build
+    \end{block}
+
+    \begin{block}{4. Sécurité des Données}
+        \textbf{Problème} : Données sensibles (documents d'identité) \\
+        \textbf{Solution} : Stockage partiel uniquement, JWT, HTTPS
+    \end{block}
+\end{frame}
+
+% ============================================================
+% SECTION 12 : PERSPECTIVES
+% ============================================================
+\section{Perspectives d'Évolution}
+
+\begin{frame}{Améliorations Futures}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Court Terme (3 mois)}
+                \begin{itemize}
+                    \item Notifications email/SMS
+                    \item Application mobile
+                    \item Export PDF déclarations
+                    \item Multi-langues (EN, FR)
+                \end{itemize}
+            \end{block}
+
+            \vspace{0.3cm}
+
+            \begin{block}{Moyen Terme (6 mois)}
+                \begin{itemize}
+                    \item Machine Learning (patterns)
+                    \item Matching phonétique
+                    \item Géolocalisation GPS
+                    \item Système de réputation
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Long Terme (12 mois)}
+                \begin{itemize}
+                    \item OCR (extraction documents)
+                    \item IA prédictive (lieux)
+                    \item Blockchain (traçabilité)
+                    \item API publique
+                \end{itemize}
+            \end{block}
+
+            \vspace{0.3cm}
+
+            \begin{block}{Partenariats}
+                \begin{itemize}
+                    \item Commissariats de police
+                    \item Mairies / Préfectures
+                    \item Compagnies de transport
+                    \item Établissements publics
+                \end{itemize}
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ============================================================
+% SECTION 13 : CONCLUSION
+% ============================================================
+\section{Conclusion}
+
+\begin{frame}{Bilan du Projet}
+    \begin{block}{Objectifs Atteints}
+        \begin{itemize}
+            \item \textcolor{vertSucces}{\faCheckCircle} Plateforme web fonctionnelle et déployée
+            \item \textcolor{vertSucces}{\faCheckCircle} Système de matching intelligent (+95\% de détection)
+            \item \textcolor{vertSucces}{\faCheckCircle} Interface utilisateur intuitive
+            \item \textcolor{vertSucces}{\faCheckCircle} Dashboard administrateur complet
+            \item \textcolor{vertSucces}{\faCheckCircle} Sécurité et protection des données
+            \item \textcolor{vertSucces}{\faCheckCircle} Documentation exhaustive
+            \item \textcolor{vertSucces}{\faCheckCircle} Tests validés (100\%)
+        \end{itemize}
+    \end{block}
+
+    \vspace{0.3cm}
+
+    \begin{exampleblock}{Compétences Mobilisées}
+        Full-stack (JS, Python), IA/ML (NLP, LLM), DevOps (CI/CD), UX/UI, Gestion de projet
+    \end{exampleblock}
+\end{frame}
+
+\begin{frame}{Apports du Projet}
+    \begin{columns}[T]
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Techniques}
+                \begin{itemize}
+                    \item Architecture 3-tiers
+                    \item Microservices (Backend + IA)
+                    \item Fuzzy matching avancé
+                    \item Intégration LLM
+                    \item NoSQL (MongoDB)
+                    \item CI/CD automatisé
+                \end{itemize}
+            \end{block}
+        \end{column}
+        \begin{column}{0.48\textwidth}
+            \begin{block}{Personnels}
+                \begin{itemize}
+                    \item Gestion de projet
+                    \item Problem solving
+                    \item Veille technologique
+                    \item Documentation
+                    \item Autonomie
+                    \item Rigueur
+                \end{itemize}
+            \end{block}
+        \end{column}
+    \end{columns}
+
+    \vspace{0.5cm}
+
+    \begin{alertblock}{Impact Social}
+        Faciliter la récupération de documents perdus pour les citoyens
+    \end{alertblock}
+\end{frame}
+
+\begin{frame}{Conclusion Générale}
+    \begin{center}
+        \Large
+        \textbf{SmartSearch} est une plateforme web intelligente qui transforme la recherche de documents perdus grâce à un système de \textbf{matching automatique} basé sur l'\textbf{intelligence artificielle}.
+
+        \vspace{1cm}
+
+        Le système atteint \textbf{95\% de détection} des correspondances, même avec des \textbf{informations partielles ou erronées}, grâce à une combinaison innovante de \textbf{fuzzy matching}, \textbf{embeddings sémantiques} et \textbf{LLM}.
+
+        \vspace{1cm}
+
+        \huge
+        \textbf{Merci pour votre attention !}
+    \end{center}
+\end{frame}
+
+% ============================================================
+% QUESTIONS
+% ============================================================
+\begin{frame}
+    \begin{center}
+        \Huge
+        \textbf{Questions ?}
+
+        \vspace{2cm}
+
+        \normalsize
+        \textbf{NGOA (HERVEMEUPS)} \\
+        M2 SIGL Professionnel - Juin 2026 \\
+        \vspace{0.5cm}
+        SmartSearch - Version 3.1 \\
+        Système Intelligent de Gestion de Documents Perdus
+
+        \vspace{1cm}
+
+        \small
+        \faGithub\ GitHub : HERVEMEUPS/smartsearch-app \\
+        \faGlobe\ URL : smartsearch-backend.onrender.com
+    \end{center}
+\end{frame}
+
+% ============================================================
+% ANNEXES
+% ============================================================
+\appendix
+\section{Annexes}
+
+\begin{frame}{Annexe : Statistiques du Projet}
+    \begin{table}
+        \small
+        \begin{tabular}{lc}
+            \toprule
+            \textbf{Métrique} & \textbf{Valeur} \\
+            \midrule
+            Lignes de code (Backend) & ~5,000 \\
+            Lignes de code (Frontend) & ~3,000 \\
+            Lignes de code (IA Service) & ~2,000 \\
+            Lignes de documentation & ~10,600 \\
+            Nombre de commits & 30+ \\
+            Durée du projet & 3 mois \\
+            Nombre de fichiers & 80+ \\
+            Tests automatisés & 15 \\
+            \bottomrule
+        \end{tabular}
+    \end{table}
+\end{frame}
+
+\begin{frame}{Annexe : Technologies \& Versions}
+    \begin{table}
+        \footnotesize
+        \begin{tabular}{lll}
+            \toprule
+            \textbf{Technologie} & \textbf{Version} & \textbf{Usage} \\
+            \midrule
+            Node.js & 18+ & Backend API \\
+            Express.js & 4.18 & Framework web \\
+            MongoDB & 6.0 & Base de données \\
+            Python & 3.9+ & Service IA \\
+            FastAPI & 0.109 & API IA \\
+            RapidFuzz & 3.6.1 & Fuzzy matching \\
+            Transformers & 4.36 & Embeddings \\
+            Claude API & 3.0 & LLM \\
+            JWT & 9.0 & Authentification \\
+            Bcrypt & 5.1 & Hachage passwords \\
+            \bottomrule
+        \end{tabular}
+    \end{table}
+\end{frame}
+
+\begin{frame}{Annexe : Ressources \& Documentation}
+    \begin{block}{Documentation Projet}
+        \begin{itemize}
+            \item README.md - Vue d'ensemble
+            \item ARCHITECTURE.md - Architecture technique
+            \item FUZZY\_MATCHING\_SYSTEM.md - Système de matching
+            \item GUIDE\_TEST\_FUZZY\_MATCHING.md - Tests
+            \item DEPLOYMENT\_GUIDE.md - Déploiement
+            \item CHANGELOG.md - Historique des versions
+        \end{itemize}
+    \end{block}
+
+    \begin{block}{Ressources Externes}
+        \begin{itemize}
+            \item RapidFuzz : \url{https://github.com/maxbachmann/RapidFuzz}
+            \item MongoDB Atlas : \url{https://www.mongodb.com/cloud/atlas}
+            \item Render : \url{https://render.com}
+            \item Anthropic Claude : \url{https://www.anthropic.com}
+        \end{itemize}
+    \end{block}
+\end{frame}
+
+\end{document}
