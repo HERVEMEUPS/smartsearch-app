@@ -51,63 +51,124 @@ class MatchingService {
   }
 
   /**
-   * Calculer le score de correspondance via le service IA
+   * Calculer le score de correspondance (version simplifiée sans IA)
    */
   async computeMatch(declA, declB) {
     try {
-      // Vérifier que le service IA est configuré
-      if (!config.aiService.url) {
-        throw new Error('Service IA non configuré');
+      // Calcul de similarité simple mais efficace (sans service IA externe)
+      const scores = {
+        typeDocument: 0,
+        nom: 0,
+        numero: 0,
+        localisation: 0,
+        date: 0
+      };
+
+      // 1. Type de document (40% du score) - Doit être identique
+      if (declA.typeDocument === declB.typeDocument) {
+        scores.typeDocument = 0.40;
       }
 
-      const response = await axios.post(
-        `${config.aiService.url}/api/ai/compute-match`,
-        {
-          declarationA: {
-            id: declA._id.toString(),
-            type: declA.type,
-            typeDocument: declA.typeDocument,
-            description: declA.description,
-            nomPartiel: declA.nomPartiel,
-            numeroPartiel: declA.numeroPartiel,
-            dateEvenement: declA.dateEvenement,
-            localisation: {
-              ville: declA.localisation.ville,
-              quartier: declA.localisation.quartier
-            }
-          },
-          declarationB: {
-            id: declB._id.toString(),
-            type: declB.type,
-            typeDocument: declB.typeDocument,
-            description: declB.description,
-            nomPartiel: declB.nomPartiel,
-            numeroPartiel: declB.numeroPartiel,
-            dateEvenement: declB.dateEvenement,
-            localisation: {
-              ville: declB.localisation.ville,
-              quartier: declB.localisation.quartier
-            }
-          }
-        },
-        {
-          timeout: config.aiService.timeout || 30000,
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      // 2. Nom (30% du score) - Similarité de chaîne
+      if (declA.nomPartiel && declB.nomPartiel) {
+        scores.nom = this.calculateStringSimilarity(
+          declA.nomPartiel.toLowerCase(),
+          declB.nomPartiel.toLowerCase()
+        ) * 0.30;
+      }
 
-      return response.data;
+      // 3. Numéro (20% du score) - Doit être identique ou très similaire
+      if (declA.numeroPartiel && declB.numeroPartiel) {
+        const numA = declA.numeroPartiel.replace(/\s+/g, '').toLowerCase();
+        const numB = declB.numeroPartiel.replace(/\s+/g, '').toLowerCase();
+        if (numA === numB) {
+          scores.numero = 0.20;
+        } else if (numA.includes(numB) || numB.includes(numA)) {
+          scores.numero = 0.15;
+        }
+      }
+
+      // 4. Localisation (5% du score) - Même ville
+      if (declA.localisation?.ville && declB.localisation?.ville) {
+        if (declA.localisation.ville.toLowerCase() === declB.localisation.ville.toLowerCase()) {
+          scores.localisation = 0.05;
+        }
+      }
+
+      // 5. Date (5% du score) - Dans une fenêtre de temps raisonnable
+      if (declA.dateEvenement && declB.dateEvenement) {
+        const dateA = new Date(declA.dateEvenement);
+        const dateB = new Date(declB.dateEvenement);
+        const diffDays = Math.abs((dateB - dateA) / (1000 * 60 * 60 * 24));
+
+        if (diffDays <= 7) {
+          scores.date = 0.05;
+        } else if (diffDays <= 30) {
+          scores.date = 0.03;
+        }
+      }
+
+      // Calcul du score global
+      const scoreGlobal = Object.values(scores).reduce((sum, val) => sum + val, 0);
+
+      // Retourner dans le format attendu
+      return {
+        score_global: scoreGlobal,
+        score_nlp: scores.nom + scores.numero,
+        score_llm: scores.typeDocument,
+        score_geo: scores.localisation + scores.date,
+        au_dessus_du_seuil: scoreGlobal >= config.matching.scoreThreshold,
+        details: scores,
+        justification: `Score calculé: ${(scoreGlobal * 100).toFixed(1)}%. ` +
+          `Type: ${declA.typeDocument === declB.typeDocument ? '✓' : '✗'}, ` +
+          `Nom: ${(scores.nom / 0.30 * 100).toFixed(0)}%, ` +
+          `Numéro: ${scores.numero > 0 ? '✓' : '✗'}`
+      };
     } catch (error) {
-      if (error.response) {
-        throw new Error(`Service IA error: ${error.response.status} - ${error.response.data?.message || error.message}`);
-      } else if (error.request) {
-        throw new Error('Service IA non disponible. Vérifiez qu\'il est démarré sur ' + config.aiService.url);
-      } else {
-        throw error;
+      console.error('Erreur calcul match:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Calculer la similarité entre deux chaînes (algorithme de Jaro-Winkler simplifié)
+   */
+  calculateStringSimilarity(str1, str2) {
+    if (str1 === str2) return 1.0;
+    if (!str1 || !str2) return 0.0;
+
+    // Normaliser les chaînes
+    str1 = str1.trim().toLowerCase();
+    str2 = str2.trim().toLowerCase();
+
+    // Si une chaîne contient l'autre
+    if (str1.includes(str2) || str2.includes(str1)) {
+      return 0.9;
+    }
+
+    // Calcul simple de similarité par caractères communs
+    const len1 = str1.length;
+    const len2 = str2.length;
+    const maxLen = Math.max(len1, len2);
+
+    let matches = 0;
+    const minLen = Math.min(len1, len2);
+
+    for (let i = 0; i < minLen; i++) {
+      if (str1[i] === str2[i]) {
+        matches++;
       }
     }
+
+    // Bonus pour les mots communs
+    const words1 = str1.split(/\s+/);
+    const words2 = str2.split(/\s+/);
+    const commonWords = words1.filter(w => words2.includes(w)).length;
+
+    const charSimilarity = matches / maxLen;
+    const wordSimilarity = commonWords / Math.max(words1.length, words2.length);
+
+    return (charSimilarity * 0.5) + (wordSimilarity * 0.5);
   }
 
   /**
