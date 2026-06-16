@@ -5,7 +5,7 @@
 > **Auteur :** NGOA (HERVEMEUPS) | **Date :** Juin 2026
 
 ## 🎯 Description
-Plateforme web intelligente permettant de **déclarer** et **rechercher** des documents perdus ou trouvés (CNI, passeports, permis, etc.) avec un système de **matching automatique** basé sur des algorithmes de fuzzy matching et scoring avancé.
+Plateforme web intelligente permettant de **déclarer** et **rechercher** des documents perdus ou trouvés (CNI, passeports, permis, etc.) avec un système de **matching automatique** basé sur des algorithmes de **fuzzy matching** (RapidFuzz), embeddings sémantiques et scoring avancé.
 
 ## 📂 Structure du Projet
 

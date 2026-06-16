@@ -1,8 +1,9 @@
 """
 Moteur de matching intelligent
-Combine NLP, LLM et scoring géographique
+Combine Fuzzy Matching, NLP, LLM et scoring géographique
 """
 from sentence_transformers import SentenceTransformer, util
+from rapidfuzz import fuzz, process
 from typing import Dict, List, Tuple
 import numpy as np
 from loguru import logger
@@ -134,7 +135,7 @@ class MatchingEngine:
         }
 
     async def _compute_nlp_score(self, decl_a: Dict, decl_b: Dict) -> float:
-        """Calcule le score NLP (embeddings + entités)"""
+        """Calcule le score NLP (embeddings + fuzzy matching + entités)"""
 
         # 1. Similarité sémantique via embeddings
         desc_a = decl_a.get("description", "")
@@ -148,23 +149,46 @@ class MatchingEngine:
 
         similarity = float(util.cos_sim(emb_a, emb_b)[0][0])
 
-        # 2. Bonus pour correspondance des noms/numéros partiels
+        # 2. Fuzzy matching pour les noms et numéros partiels
         bonus = 0.0
 
-        nom_a = decl_a.get("nomPartiel", "").lower()
-        nom_b = decl_b.get("nomPartiel", "").lower()
+        nom_a = decl_a.get("nomPartiel", "").lower().strip()
+        nom_b = decl_b.get("nomPartiel", "").lower().strip()
 
         if nom_a and nom_b:
-            # Simple check de chevauchement
-            if nom_a in nom_b or nom_b in nom_a:
-                bonus += 0.2
+            # Utiliser plusieurs algorithmes de fuzzy matching
+            ratio = fuzz.ratio(nom_a, nom_b) / 100.0
+            partial = fuzz.partial_ratio(nom_a, nom_b) / 100.0
+            token_sort = fuzz.token_sort_ratio(nom_a, nom_b) / 100.0
 
-        num_a = decl_a.get("numeroPartiel", "")
-        num_b = decl_b.get("numeroPartiel", "")
+            # Prendre le meilleur score
+            fuzzy_score = max(ratio, partial, token_sort)
+
+            # Bonus progressif basé sur la similarité fuzzy
+            if fuzzy_score >= 0.9:
+                bonus += 0.25
+            elif fuzzy_score >= 0.8:
+                bonus += 0.20
+            elif fuzzy_score >= 0.7:
+                bonus += 0.15
+            elif fuzzy_score >= 0.6:
+                bonus += 0.10
+
+        num_a = decl_a.get("numeroPartiel", "").strip()
+        num_b = decl_b.get("numeroPartiel", "").strip()
 
         if num_a and num_b:
-            if num_a in num_b or num_b in num_a:
-                bonus += 0.2
+            # Pour les numéros, utiliser partial_ratio (capture les sous-chaînes)
+            num_fuzzy = fuzz.partial_ratio(num_a, num_b) / 100.0
+
+            if num_fuzzy >= 0.9:
+                bonus += 0.25
+            elif num_fuzzy >= 0.8:
+                bonus += 0.20
+            elif num_fuzzy >= 0.7:
+                bonus += 0.15
+            elif num_fuzzy >= 0.6:
+                bonus += 0.10
 
         # Score final NLP (limité à 1.0)
         score = min(1.0, similarity + bonus)
@@ -184,25 +208,40 @@ class MatchingEngine:
             return score_nlp, "Évaluation automatique (LLM indisponible)"
 
     def _compute_geo_score(self, decl_a: Dict, decl_b: Dict) -> float:
-        """Calcule le score géographique"""
+        """Calcule le score géographique avec fuzzy matching"""
 
         loc_a = decl_a.get("localisation", {})
         loc_b = decl_b.get("localisation", {})
 
-        ville_a = loc_a.get("ville", "").lower()
-        ville_b = loc_b.get("ville", "").lower()
+        ville_a = loc_a.get("ville", "").lower().strip()
+        ville_b = loc_b.get("ville", "").lower().strip()
 
-        if ville_a == ville_b:
-            # Même ville : vérifier le quartier
-            quartier_a = loc_a.get("quartier", "").lower()
-            quartier_b = loc_b.get("quartier", "").lower()
+        if not ville_a or not ville_b:
+            return 0.5  # Pas assez d'informations
 
-            if quartier_a and quartier_b and quartier_a == quartier_b:
-                return 1.0  # Même quartier : score maximal
+        # Fuzzy matching sur les villes
+        ville_fuzzy = fuzz.ratio(ville_a, ville_b) / 100.0
+
+        if ville_fuzzy >= 0.85:
+            # Même ville (ou très proche) : vérifier le quartier
+            quartier_a = loc_a.get("quartier", "").lower().strip()
+            quartier_b = loc_b.get("quartier", "").lower().strip()
+
+            if quartier_a and quartier_b:
+                quartier_fuzzy = fuzz.ratio(quartier_a, quartier_b) / 100.0
+
+                if quartier_fuzzy >= 0.85:
+                    return 1.0  # Même quartier : score maximal
+                elif quartier_fuzzy >= 0.7:
+                    return 0.9  # Quartiers similaires
 
             return 0.8  # Même ville seulement
 
-        # Villes différentes : score dégressif
+        elif ville_fuzzy >= 0.7:
+            # Villes similaires (fautes de frappe, abréviations)
+            return 0.6
+
+        # Villes différentes
         return 0.3
 
     def _get_confidence_level(self, score: float) -> str:
