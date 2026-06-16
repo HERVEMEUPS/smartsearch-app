@@ -5,9 +5,9 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 // Charger les modèles
-require('./src/models');
-const Declaration = require('./src/models/Declaration');
-const matchingService = require('./src/services/matchingService');
+require('../src/models');
+const Declaration = require('../src/models/Declaration');
+const matchingService = require('../src/services/matchingService');
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/documents_perdus';
 

@@ -139,14 +139,27 @@ DeclarationSchema.query.matchCandidates = function(declaration, windowDays = 30)
   const dateMax = new Date(declaration.dateEvenement);
   dateMax.setDate(dateMax.getDate() + windowDays);
 
-  return this.find({
+  // Critères de base sans filtre strict sur la ville
+  const query = {
     _id: { $ne: declaration._id },
     type: declaration.getOppositeType(),
     typeDocument: declaration.typeDocument,
-    'localisation.ville': declaration.localisation.ville,
     dateEvenement: { $gte: dateMin, $lte: dateMax },
     statut: { $in: ['EN_ATTENTE', 'EN_MATCH'] }
-  });
+  };
+
+  // Ajouter un filtre souple sur la ville (case-insensitive regex)
+  if (declaration.localisation?.ville) {
+    const villePattern = declaration.localisation.ville
+      .trim()
+      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // Escape regex special chars
+
+    query['localisation.ville'] = {
+      $regex: new RegExp(`^${villePattern}$`, 'i')
+    };
+  }
+
+  return this.find(query);
 };
 
 module.exports = model('Declaration', DeclarationSchema);

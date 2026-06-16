@@ -64,34 +64,51 @@ class MatchingService {
         date: 0
       };
 
-      // 1. Type de document (40% du score) - Doit être identique
+      // 1. Type de document (35% du score) - Doit être identique
       if (declA.typeDocument === declB.typeDocument) {
-        scores.typeDocument = 0.40;
+        scores.typeDocument = 0.35;
       }
 
-      // 2. Nom (30% du score) - Similarité de chaîne
+      // 2. Nom (30% du score) - Similarité de chaîne avec normalisation
       if (declA.nomPartiel && declB.nomPartiel) {
-        scores.nom = this.calculateStringSimilarity(
-          declA.nomPartiel.toLowerCase(),
-          declB.nomPartiel.toLowerCase()
-        ) * 0.30;
+        const similarity = this.calculateStringSimilarity(
+          declA.nomPartiel.toLowerCase().trim(),
+          declB.nomPartiel.toLowerCase().trim()
+        );
+        scores.nom = similarity * 0.30;
       }
 
-      // 3. Numéro (20% du score) - Doit être identique ou très similaire
+      // 3. Numéro (25% du score) - Match exact = score maximal
       if (declA.numeroPartiel && declB.numeroPartiel) {
-        const numA = declA.numeroPartiel.replace(/\s+/g, '').toLowerCase();
-        const numB = declB.numeroPartiel.replace(/\s+/g, '').toLowerCase();
+        const numA = declA.numeroPartiel.replace(/[\s\-_./]/g, '').toLowerCase();
+        const numB = declB.numeroPartiel.replace(/[\s\-_./]/g, '').toLowerCase();
+
         if (numA === numB) {
-          scores.numero = 0.20;
+          // Match exact sur le numéro = score maximal
+          scores.numero = 0.25;
         } else if (numA.includes(numB) || numB.includes(numA)) {
-          scores.numero = 0.15;
+          // Match partiel
+          const ratio = Math.min(numA.length, numB.length) / Math.max(numA.length, numB.length);
+          scores.numero = 0.25 * ratio;
+        } else {
+          // Calculer similarité avec Levenshtein
+          const similarity = this.calculateLevenshteinSimilarity(numA, numB);
+          if (similarity >= 0.8) {
+            scores.numero = 0.25 * similarity;
+          }
         }
       }
 
-      // 4. Localisation (5% du score) - Même ville
+      // 4. Localisation (5% du score) - Même ville (case-insensitive)
       if (declA.localisation?.ville && declB.localisation?.ville) {
-        if (declA.localisation.ville.toLowerCase() === declB.localisation.ville.toLowerCase()) {
+        const villeA = declA.localisation.ville.toLowerCase().trim();
+        const villeB = declB.localisation.ville.toLowerCase().trim();
+
+        if (villeA === villeB) {
           scores.localisation = 0.05;
+        } else if (this.calculateStringSimilarity(villeA, villeB) >= 0.85) {
+          // Villes similaires (typos, accents)
+          scores.localisation = 0.03;
         }
       }
 
@@ -105,24 +122,36 @@ class MatchingService {
           scores.date = 0.05;
         } else if (diffDays <= 30) {
           scores.date = 0.03;
+        } else if (diffDays <= 60) {
+          scores.date = 0.01;
         }
       }
 
       // Calcul du score global
       const scoreGlobal = Object.values(scores).reduce((sum, val) => sum + val, 0);
 
+      // Bonus pour correspondance parfaite (même numéro + même nom)
+      let bonus = 0;
+      if (scores.numero === 0.25 && scores.nom >= 0.27) {
+        bonus = 0.10; // Bonus de 10% pour match quasi-parfait
+      }
+
+      const scoreFinal = Math.min(1.0, scoreGlobal + bonus);
+
       // Retourner dans le format attendu
       return {
-        score_global: scoreGlobal,
+        score_global: scoreFinal,
         score_nlp: scores.nom + scores.numero,
         score_llm: scores.typeDocument,
         score_geo: scores.localisation + scores.date,
-        au_dessus_du_seuil: scoreGlobal >= config.matching.scoreThreshold,
+        au_dessus_du_seuil: scoreFinal >= config.matching.scoreThreshold,
         details: scores,
-        justification: `Score calculé: ${(scoreGlobal * 100).toFixed(1)}%. ` +
+        bonus: bonus,
+        justification: `Score calculé: ${(scoreFinal * 100).toFixed(1)}%. ` +
           `Type: ${declA.typeDocument === declB.typeDocument ? '✓' : '✗'}, ` +
           `Nom: ${(scores.nom / 0.30 * 100).toFixed(0)}%, ` +
-          `Numéro: ${scores.numero > 0 ? '✓' : '✗'}`
+          `Numéro: ${scores.numero > 0 ? '✓' : '✗'}` +
+          (bonus > 0 ? ` (Bonus: +${(bonus * 100).toFixed(0)}%)` : '')
       };
     } catch (error) {
       console.error('Erreur calcul match:', error);
@@ -169,6 +198,43 @@ class MatchingService {
     const wordSimilarity = commonWords / Math.max(words1.length, words2.length);
 
     return (charSimilarity * 0.5) + (wordSimilarity * 0.5);
+  }
+
+  /**
+   * Calculer la distance de Levenshtein et la convertir en score de similarité
+   */
+  calculateLevenshteinSimilarity(str1, str2) {
+    if (str1 === str2) return 1.0;
+    if (!str1 || !str2) return 0.0;
+
+    const len1 = str1.length;
+    const len2 = str2.length;
+
+    // Créer la matrice de distances
+    const matrix = Array(len1 + 1).fill(null).map(() => Array(len2 + 1).fill(0));
+
+    // Initialiser la première ligne et colonne
+    for (let i = 0; i <= len1; i++) matrix[i][0] = i;
+    for (let j = 0; j <= len2; j++) matrix[0][j] = j;
+
+    // Remplir la matrice
+    for (let i = 1; i <= len1; i++) {
+      for (let j = 1; j <= len2; j++) {
+        const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j] + 1,      // Suppression
+          matrix[i][j - 1] + 1,      // Insertion
+          matrix[i - 1][j - 1] + cost // Substitution
+        );
+      }
+    }
+
+    // Distance de Levenshtein
+    const distance = matrix[len1][len2];
+
+    // Convertir en score de similarité (0 à 1)
+    const maxLen = Math.max(len1, len2);
+    return maxLen === 0 ? 1.0 : 1.0 - (distance / maxLen);
   }
 
   /**
